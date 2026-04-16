@@ -14,3 +14,4 @@
 | 2026.03 | IDProxy | 小红书 | 冷启动CTR | [IDProxy: Cold-Start CTR Prediction for Ads and Recommendation at Xiaohongshu with Multimodal LLMs](https://arxiv.org/abs/2603.01590) | [笔记](paper/2026/2603-IDProxy-小红书-冷启动CTR.md) |
 | 2026.03 | R4T | UIUC / Google DeepMind | 集合检索 | [Efficient, Property-Aligned Fan-Out Retrieval via RL-Compiled Diffusion](https://arxiv.org/abs/2603.06397) | [笔记](paper/2026/2603-R4T-UIUC&Google-集合检索.md) |
 | 2026.04 | UniMixer | 快手 | 推荐系统Scaling | [UniMixer: A Unified Architecture for Scaling Laws in Recommendation Systems](https://arxiv.org/abs/2604.00590) | [笔记](paper/2026/2604-UniMixer-快手-推荐系统Scaling.md) |
+| 2026.04 | SID-Coord | 快手 | 短视频搜索Ranking | [SID-Coord: Coordinating Semantic IDs for ID-based Ranking in Short-Video Search](https://arxiv.org/abs/2604.10471) | [笔记](paper/2026/2604-SIDCoord-快手-短视频搜索Ranking.md) |
