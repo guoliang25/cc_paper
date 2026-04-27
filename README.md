@@ -19,3 +19,9 @@
 | 2026.04 | UniMixer | 快手 | 推荐系统Scaling | [UniMixer: A Unified Architecture for Scaling Laws in Recommendation Systems](https://arxiv.org/abs/2604.00590) | [笔记](paper/2026/2604-UniMixer-快手-推荐系统Scaling.md) |
 | 2026.04 | SID-Coord | 快手 | 短视频搜索Ranking | [SID-Coord: Coordinating Semantic IDs for ID-based Ranking in Short-Video Search](https://arxiv.org/abs/2604.10471) | [笔记](paper/2026/2604-SIDCoord-快手-短视频搜索Ranking.md) |
 | 2026.04 | R³-VAE | 字节跳动 | 生成式推荐SID | [R³-VAE: Reference Vector-Guided Rating Residual Quantization VAE for Generative Recommendation](https://arxiv.org/abs/2604.11440) | [笔记](paper/2026/2604-R3VAE-字节-生成式推荐SID.md) |
+
+## 专题对比
+
+| 主题 | 覆盖论文 | 笔记 |
+|------|---------|------|
+| 字节四大工业 Ranking 架构 | RankMixer / LONGER / OneTrans / MixFormer | [对比笔记](paper/对比/字节四大Ranking架构对比-RankMixer-LONGER-OneTrans-MixFormer.md) |
