@@ -9,6 +9,7 @@
 | 2023.05 | TIGER | Google DeepMind | 生成式推荐 | [Recommender Systems with Generative Retrieval](https://arxiv.org/abs/2305.05065) | [笔记](paper/2023/2305-TIGER-Google-生成式推荐.md) |
 | 2025.05 | GatedAttention | Qwen Team / 阿里 | 注意力机制 | [Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free](https://arxiv.org/abs/2505.06708) | [笔记](paper/2025/2505-GatedAttention-Qwen-注意力机制.md) |
 | 2025.07 | RankMixer | 字节跳动 | 推荐系统Scaling | [RankMixer: Scaling Up Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2507.15551) | [笔记](paper/2025/2507-RankMixer-字节-推荐系统Scaling.md) |
+| 2025.10 | OneTrans | 字节跳动 / NTU | 统一排序架构 | [OneTrans: Unified Feature Interaction and Sequence Modeling with One Transformer in Industrial Recommender](https://arxiv.org/abs/2510.26104) | [笔记](paper/2025/2510-OneTrans-字节-统一排序架构.md) |
 | 2025.11 | MaskGR | Snap / UT Austin | 生成式推荐 | [Masked Diffusion for Generative Recommendation](https://arxiv.org/abs/2511.23021) | [笔记](paper/2025/2511-MaskGR-Snap-生成式推荐.md) |
 | 2025.12 | EnsRec | Snap | 序列推荐 | [Exploiting ID-Text Complementarity via Ensembling for Sequential Recommendation](https://arxiv.org/abs/2512.17820) | [笔记](paper/2025/2512-EnsRec-Snap-序列推荐.md) |
 | 2026.02 | MixFormer | 字节跳动 | 推荐系统Scaling | [MixFormer: Co-Scaling Up Dense and Sequence in Industrial Recommenders](https://arxiv.org/abs/2602.14110) | [笔记](paper/2026/2602-MixFormer-字节-推荐系统Scaling.md) |
