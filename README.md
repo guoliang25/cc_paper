@@ -25,4 +25,8 @@
 | 主题 | 覆盖论文 | 笔记 |
 |------|---------|------|
 | 字节四大工业 Ranking 架构 | RankMixer / LONGER / OneTrans / MixFormer | [对比笔记](paper/对比/字节四大Ranking架构对比-RankMixer-LONGER-OneTrans-MixFormer.md) |
-| RankMixer 的 Token 数 T 与 Scaling Law 的斜率/截距 | RankMixer / LONGER / OneTrans / MixFormer | [HTML 版（含数学公式 + 论文原图）](paper/对比/RankMixer-T与Scaling斜率截距.html) |
+| RankMixer 的 Token 数 T 与 Scaling Law 的斜率/截距 | RankMixer / LONGER / OneTrans / MixFormer | [HTML 版（含数学公式 + 论文原图）](docs/rankmixer-T-and-scaling-slope-intercept.html) · [在线访问](https://guoliang25.github.io/cc_paper/rankmixer-T-and-scaling-slope-intercept.html) |
+
+## 在线专题站
+
+GitHub Pages 地址：<https://guoliang25.github.io/cc_paper/>
