@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RankMixer Token 数 T 与 Scaling Law 的斜率/截距 — 深入解读</title>
+
+<!-- MathJax 渲染 LaTeX -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2328;
+    --muted: #6a737d;
+    --accent: #0969da;
+    --accent-soft: #ddf4ff;
+    --border: #d0d7de;
+    --code-bg: #f6f8fa;
+    --callout-bg: #fff8c5;
+    --callout-border: #ffdf5d;
+    --good: #1a7f37;
+    --bad: #cf222e;
+    --neutral: #9a6700;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.75;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 120px;
+  }
+  header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 32px;
+  }
+  header h1 {
+    margin: 0 0 8px;
+    font-size: 1.8em;
+    line-height: 1.3;
+  }
+  header .meta {
+    color: var(--muted);
+    font-size: 0.95em;
+  }
+  h2 {
+    margin-top: 56px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.4em;
+  }
+  h3 { margin-top: 32px; font-size: 1.15em; }
+  h4 { margin-top: 20px; font-size: 1.02em; color: var(--accent); }
+  p { margin: 10px 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.5;
+  }
+  pre code { background: transparent; padding: 0; }
+  blockquote {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    margin: 16px 0;
+    padding: 10px 18px;
+    color: #0a3069;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout {
+    background: var(--callout-bg);
+    border: 1px solid var(--callout-border);
+    border-left: 4px solid #d4a72c;
+    padding: 12px 18px;
+    margin: 20px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout strong { color: #7d4e00; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 18px 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f0f3f6; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  figure {
+    margin: 24px 0;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  figure img {
+    max-width: 100%;
+    border-radius: 4px;
+  }
+  figcaption {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.88em;
+    font-style: italic;
+  }
+  .toc {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 28px;
+    margin: 32px 0 48px;
+  }
+  .toc h3 { margin: 0 0 10px; font-size: 1em; color: var(--fg); }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .ascii-plot {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: "SF Mono", Menlo, Monaco, monospace;
+    font-size: 0.82em;
+    line-height: 1.35;
+    padding: 18px 22px;
+    border-radius: 8px;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 18px 0;
+  }
+  .good { color: var(--good); font-weight: 600; }
+  .bad  { color: var(--bad);  font-weight: 600; }
+  .neutral { color: var(--neutral); font-weight: 600; }
+  .kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: #fff;
+    font-size: 0.85em;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.88em;
+    text-align: center;
+  }
+  .ratio-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 0.82em;
+    font-weight: 600;
+  }
+  .ratio-up   { background: #dafbe1; color: var(--good); }
+  .ratio-down { background: #ffebe9; color: var(--bad); }
+  .ratio-eq   { background: #fff8c5; color: var(--neutral); }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>RankMixer 的 Token 数 <em>T</em> 与 Scaling Law 的斜率 / 截距</h1>
+  <div class="meta">
+    配套讨论：对话中关于 RankMixer 设计细节与工业 Ranking 架构 scaling 分析<br />
+    相关论文：<strong>RankMixer</strong>（2025.07）· <strong>LONGER</strong>（2025.05）· <strong>OneTrans</strong>（2025.10）· <strong>MixFormer</strong>（2026.02）
+  </div>
+</header>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#part1">Part I · RankMixer 里的 Token 数 $T$ 是不是拍的？</a></li>
+    <li><a href="#part2">Part II · $Td^2$ 怎么变：参数量辨析</a></li>
+    <li><a href="#part3">Part III · Scaling Law 的斜率与截距</a></li>
+    <li><a href="#part4">Part IV · 四大架构的 scaling 曲线实例</a></li>
+    <li><a href="#part5">Part V · 一句话总结</a></li>
+  </ol>
+</div>
+
+<!-- ================= PART I ================= -->
+<h2 id="part1">Part I · RankMixer 里的 Token 数 $T$ 是不是拍的？</h2>
+
+<p>
+先厘清 RankMixer 论文里 "token 个数" 到底指什么。其实有 <strong>两组</strong> 容易混淆的 token 数：
+</p>
+
+<table>
+  <thead>
+    <tr><th>符号</th><th>含义</th><th>论文典型值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>$T$</td><td>Feature Tokenization 后的 <strong>特征 token 个数</strong></td><td>100M 配置 $T=16$；1B 配置 $T=32$</td></tr>
+    <tr><td>$N_e$</td><td>每层 FFN 的 <strong>expert 个数</strong>（Sparse-MoE）</td><td>与 $T$ 无直接关系</td></tr>
+  </tbody>
+</table>
+
+<p>
+我们讨论的是前者。具体构造方式（论文 2.2 节）：
+</p>
+
+$$
+x_i = \text{Proj}\big(e_\text{input}[\,d\cdot(i-1):d\cdot i\,]\big),\quad i=1,\ldots,T
+$$
+
+<p>
+把所有特征 embedding 拼成一条长向量 $e_\text{input}\in\mathbb{R}^{Td}$，<strong>均匀切 $T$ 段</strong>，每段做线性投影变成一个 $d$ 维 token。
+</p>
+
+<figure>
+  <img src="https://arxiv.org/html/2507.15551v2/x1.png" alt="RankMixer Block 架构" />
+  <figcaption>RankMixer Block 架构图（来源：arXiv 2507.15551）。$T$ 个 token 进入每一层，经过 Multi-head Token Mixing 与 Per-token FFN（SMoE）。</figcaption>
+</figure>
+
+<h3>$T$ 的五条约束</h3>
+
+<p>
+$T$ 是一个经验性工程超参，<strong>但它的可选空间被五个约束挤得非常窄</strong>：
+</p>
+
+<h4>约束 1 · 总参数 / FLOPs 预算</h4>
+<p>Dense 版本参数量公式：</p>
+$$\text{Param}\approx 2kLTd^2$$
+<p>主导项是 <em>Per-token FFN</em> 的 $T\cdot d^2$。$T$ 和 $d$ 同时作用。</p>
+
+<h4>约束 2 · Token Mixing 的整除性</h4>
+<p>无参数 Token Mixing 的 reshape：$\mathbb{R}^{T\times d}\to\mathbb{R}^{T\times T\times d/T}$，要求 $d\bmod T=0$，并且默认 $H=T$（head 数等于 token 数）。可选 $T$ 就被锁在 $\{8,16,32,64\}$ 这种 2 的幂。</p>
+
+<h4>约束 3 · Per-token FFN 的语义粒度</h4>
+<p>$T$ 对应 <em>"把全部特征分成几个独立子空间做非线性变换"</em>：</p>
+<ul>
+  <li>$T$ 太小 → user / item / context / cross 被迫共享 FFN，语义被稀释；</li>
+  <li>$T$ 太大 → 每 token 拿到的特征太少（$d$ 小），FFN 表达力不足。</li>
+</ul>
+
+<h4>约束 4 · GPU 硬件对齐</h4>
+<p>Tensor core 要求矩阵维度对齐 16/32/64 倍数。两个配置有意思的共同点：</p>
+<table>
+  <thead>
+    <tr><th>配置</th><th>$T$</th><th>$d$</th><th>head dim $=d/T$</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>RankMixer-100M</td><td>16</td><td>768</td><td><strong>48</strong></td></tr>
+    <tr><td>RankMixer-1B</td><td>32</td><td>1536</td><td><strong>48</strong></td></tr>
+  </tbody>
+</table>
+<p>→ <strong>head dim 锁在 48</strong>（tensor core 友好），$T$ 和 $d$ 联动变化。</p>
+
+<h4>约束 5 · Scaling Law 曲线平滑</h4>
+<p>论文 scaling 实验发现：扫 $T$、$d$、$L$ 三条轴 <em>曲线几乎重合</em>——$T$ 在合理范围内没有显著尖峰最优点，所以作者可以 "比较随意" 地取 16/32。</p>
+
+<div class="callout">
+<strong>结论：</strong>$T$ 是<strong>有边界的"拍"</strong>——被五条约束挤到只剩 $\{8,16,32,64\}$ 这几个离散值，论文选 16/32 是 <em>"在这几个候选里挑硬件对齐最舒服、语义粒度也合理的两个"</em>。
+</div>
+
+<!-- ================= PART II ================= -->
+<h2 id="part2">Part II · $Td^2$ 怎么变：参数量辨析</h2>
+
+<blockquote>
+上一轮我说过一句 "$T$ 越大、每 token 维度 $d$ 越小，参数量反而越小"——<strong>这个说法省略了关键前提，在默认视角下是错的</strong>。本节把账算清楚。
+</blockquote>
+
+<h3>参数量主导项：Per-token FFN 的 $T\cdot d^2$</h3>
+
+<p>
+RankMixer Block 里 <em>Token Mixing 无参数</em>（reshape+转置），也 <em>没有 QKV</em>（用 Token Mixing 代替了 self-attn），所以参数只来自：
+</p>
+<ul>
+  <li><strong>Per-token FFN</strong>：$L\cdot T\cdot 2kd^2$ —— 主导项</li>
+  <li><strong>入口投影</strong>：$E\cdot d$，在 $E=Td$ 时等于 $Td^2$</li>
+</ul>
+
+<h3>$T$ 变大时，$Td^2$ 怎么变？取决于"你固定了什么"</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>情境</th>
+      <th>固定的量</th>
+      <th>$Td^2$ 随 $T$ 的走向</th>
+      <th>走向</th>
+      <th>谁对？</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A · "切蛋糕"视角</td>
+      <td>总 embedding 预算 $E=Td$（即 $d=E/T$）</td>
+      <td>$Td^2 = E^2/T$</td>
+      <td><span class="ratio-badge ratio-down">↓ 随 $1/T$ 下降</span></td>
+      <td>我上一轮说的</td>
+    </tr>
+    <tr>
+      <td>B · "堆 FFN"视角</td>
+      <td>每 token 维度 $d$</td>
+      <td>$Td^2 \propto T$</td>
+      <td><span class="ratio-badge ratio-up">↑ 线性上升</span></td>
+      <td><strong>你的直觉</strong></td>
+    </tr>
+    <tr>
+      <td>C · 只扩 $d$</td>
+      <td>$T$ 固定</td>
+      <td>$Td^2 \propto d^2$</td>
+      <td><span class="ratio-badge ratio-up">↑ 二次上升</span></td>
+      <td>widen 轴 scaling</td>
+    </tr>
+    <tr>
+      <td>D · 论文实际</td>
+      <td>两者同步放大</td>
+      <td>$T:16\to32,\ d:768\to1536$，$Td^2$ 放大 <strong>8×</strong></td>
+      <td><span class="ratio-badge ratio-up">↑↑ 快速放大</span></td>
+      <td>100M → 1B</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>直觉对照</h3>
+
+<table>
+  <thead>
+    <tr><th>情境</th><th>直觉</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A · 固定 $E$</td>
+      <td>"一块蛋糕切成更多份，<strong>每份缩小得比份数增加快</strong>"——$d$ 下降的 $d^2$ 效应比 $T$ 上升的线性效应更强。</td>
+    </tr>
+    <tr>
+      <td>B · 固定 $d$</td>
+      <td>"每份大小不变，<strong>份数越多总量越大</strong>"——Per-token FFN 一套套堆上去。</td>
+    </tr>
+    <tr>
+      <td>D · 同时扩</td>
+      <td>"又加份数又加每份大小"——参数量爆炸式增长。</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>为什么 "固定 $E$" 在工业场景是常见前提？</h3>
+<ol>
+  <li>原始特征 embedding 的总维度 $E$ 由业务决定（比如 500 个字段 × 16 维 = 8000），不是自由变量；</li>
+  <li>Feature Tokenization 的设计把 $e_\text{input}\in\mathbb{R}^{Td}$ 均匀切 $T$ 份——$T$ 和 $d$ 在入口就是绑定的；</li>
+  <li>但这个前提可以被打破——论文 100M → 1B 时 $E$ 从 12288 增到 49152，显然 $E$ 本身也扩了。</li>
+</ol>
+
+<div class="callout">
+<strong>两种视角都对，关键看你固定哪个变量。</strong>工业上比较 token 切分策略时用 A（固定 $E$）；做 scaling 实验时用 D（两者同扩）。原来的说法应该加上 <em>"在总 embedding 预算给定的前提下"</em> 这个限定词。
+</div>
+
+<!-- ================= PART III ================= -->
+<h2 id="part3">Part III · Scaling Law 的斜率与截距</h2>
+
+<h3>为什么 scaling law 可以画成一条直线？</h3>
+
+<p>工业推荐 scaling 论文通常拟合：</p>
+$$y \approx \alpha\cdot x^{\beta} + \gamma$$
+
+<p>其中 $x$ 是算力类变量（参数量、FLOPs、序列长度），$y$ 是性能指标（AUC / ΔAUC / LogLoss）。画成 <strong>x 轴 log、y 轴线性</strong> 后，曲线近似直线：</p>
+
+$$y \approx \beta\cdot\log x + (\text{const})$$
+
+<p>一旦变直线，就有两个传统几何量：<strong>斜率</strong>和<strong>截距</strong>。</p>
+
+<h3>斜率（slope）= 算力的兑换率</h3>
+
+<blockquote>
+<strong>定义</strong>：$x$ 每翻倍，$y$ 涨多少。数学上 ≈ scaling law 里的指数 $\beta$。<br />
+<strong>工业含义</strong>：<em>每多烧一倍算力能换回多少性能——架构的 scaling 效率 / 远期潜力</em>。
+</blockquote>
+
+<div class="ascii-plot">ΔUAUC (%)
+ ↑                      ╱ OneTrans（<span class="good">陡</span>）
+ │                    ╱
+ │                  ╱  ← 每翻倍 FLOPs，OneTrans 多涨一截
+ │          ╱──────  RankMixer（<span class="neutral">平</span>）
+ │        ╱
+ │      ╱
+ │____╱___________________→ log(FLOPs)
+     10²        10³         10⁴</div>
+
+<ul>
+  <li><strong>斜率陡</strong>：加算力值得——<em>"远期潜力大"</em>；</li>
+  <li><strong>斜率平</strong>：加算力没用——<em>"架构饱和了"</em>。</li>
+</ul>
+
+<h3>截距（intercept）= 起跑线</h3>
+
+<blockquote>
+<strong>定义</strong>：拟合直线在 $\log x=0$（曲线左端）的 $y$ 值——直线在 y 轴上的抬升高度。<br />
+<strong>工业含义</strong>：<em>给最小算力时，架构能到什么性能——小模型的底子好不好</em>。
+</blockquote>
+
+<div class="ascii-plot">ΔAUC
+ ↑                      ╱ MixFormer（<span class="good">截距高 + 斜率持平</span>）
+ │        截距 ───►  ╱╱╱
+ │                  ╱
+ │                ╱  ──────  SOTA 序列模型
+ │              ╱
+ │            ╱
+ │____╱_______________________→ log(Sequence Length)
+     512   1k   2k   5k   10k</div>
+
+<ul>
+  <li><strong>截距高</strong>：<em>"一开始就领先"</em>；</li>
+  <li><strong>截距低</strong>：<em>"起点低"</em>，但靠斜率可能追回来。</li>
+</ul>
+
+<h3>斜率 × 截距的四种组合</h3>
+
+<table>
+  <thead>
+    <tr><th>斜率</th><th>截距</th><th>含义</th><th>典型案例</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="good">高</span></td><td><span class="good">高</span></td><td><strong>双优</strong>——起点高、上限也高</td><td>Chinchilla 风格新一代架构</td></tr>
+    <tr><td><span class="good">高</span></td><td><span class="bad">低</span></td><td><strong>后发制人</strong>——小时候不行，越 scale 越强</td><td>Transformer 早期 vs LSTM</td></tr>
+    <tr><td><span class="bad">低</span></td><td><span class="good">高</span></td><td><strong>早期赢家</strong>——起点高但加算力不涨</td><td>饱和的老架构</td></tr>
+    <tr><td><span class="bad">低</span></td><td><span class="bad">低</span></td><td>全面落后</td><td>Baseline</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+<strong>关键区分：</strong>
+<ul style="margin:6px 0">
+  <li><strong>"斜率更高"</strong> = 未来更值得投资（扩上去差距会扩大）</li>
+  <li><strong>"截距更高"</strong> = 现在就比你强（但扩上去不一定继续甩开）</li>
+</ul>
+两者独立，语义完全不同。
+</div>
+
+<!-- ================= PART IV ================= -->
+<h2 id="part4">Part IV · 四大架构的 scaling 曲线实例</h2>
+
+<p>把对比文档里的几条 scaling 描述，配上原始论文的图看一遍。</p>
+
+<h3>① RankMixer · 比 Wukong / HiFormer / DHEN 斜率更陡</h3>
+
+<figure>
+  <img src="https://arxiv.org/html/2507.15551v2/img/scaling_law.png"
+       alt="RankMixer Scaling Law" />
+  <figcaption>RankMixer Scaling Law（来源：arXiv 2507.15551）。RankMixer 在 Params 和 FLOPs 两条轴上都比 Wukong / HiFormer / DHEN 更陡；不同扩展方向（$L$、$d$、$T$）的曲线几乎重合，说明它 "吃得下算力"。</figcaption>
+</figure>
+
+<p><strong>翻译成大白话：</strong> "同样把参数从 100M 扩到 1B，RankMixer 的涨幅比 Wukong / HiFormer 大——远期更值得投资。"</p>
+
+<h3>② OneTrans · 斜率显著 > RankMixer</h3>
+
+<p>OneTrans 论文（Fig.3(b)）把自己和 RankMixer 的 ΔUAUC-vs-log(FLOPs) 画在一张图里，<strong>OneTrans 那条线更陡</strong>。论文的解读是：</p>
+
+<blockquote>
+RankMixer-centric scaling lacks a unified backbone; its MoE-based expansion predominantly widens the FFN hidden dimension. OneTrans, offering a unified Transformer backbone, scales more parameter- and compute-efficiently.
+</blockquote>
+
+<p>直白翻译："RankMixer 扩上去主要靠增加 MoE FFN 的宽度，没有统一 backbone；OneTrans 有统一 backbone，所以 scaling 效率更高。"</p>
+
+<h3>③ MixFormer · 斜率与 SOTA 序列模型持平，截距更高</h3>
+
+<figure>
+  <img src="https://arxiv.org/html/2602.14110v1/x4.png"
+       alt="MixFormer Dense Scaling" />
+  <figcaption>MixFormer Dense Scaling（FLOPs 维度，来源：arXiv 2602.14110 Fig.4）。MixFormer 在 FLOPs 轴上的 intercept（起点）更高，slope（斜率）与对手有竞争力。</figcaption>
+</figure>
+
+<figure>
+  <img src="https://arxiv.org/html/2602.14110v1/x5.png"
+       alt="MixFormer Sequence Length Scaling" />
+  <figcaption>MixFormer Sequence Length Scaling（来源：arXiv 2602.14110 Fig.5）。512 → 10k 长度下，MixFormer 始终在 SOTA 序列模型之上，两条线近似平行——斜率持平但截距领先。</figcaption>
+</figure>
+
+<p><strong>翻译成大白话：</strong> "MixFormer 在各种长度档位都比对手高一个固定幅度；再拉长也不会进一步拉开——<em>一开始就胜，扩上去也不掉</em>。"</p>
+
+<h3>④ LONGER · 三轴各自独立 power-law 拟合</h3>
+
+<p>LONGER 论文（Fig.4 + Fig.5）把 sequence length / params / FLOPs 三条轴 <em>分别</em> 拟合 $y=\alpha x^\beta+\gamma$，<strong>都得到 $R^2>0.96$</strong>——意味着：</p>
+
+<ul>
+  <li>长度从 300 → 5k，AUC / LogLoss 随 length 呈 power-law 改善；</li>
+  <li>固定 2 层、宽度扫描，AUC vs params 强 power-law（$R^2=0.987$）；</li>
+  <li>固定 $d=32$、扫 layers + length，AUC vs FLOPs 强 power-law（$R^2=0.967$）。</li>
+</ul>
+
+<p>可惜 LONGER 论文没有跟其它架构在同一张图里对比斜率。</p>
+
+<h3>MixFormer 架构与 User-Item Decoupling 视觉化</h3>
+
+<figure>
+  <img src="https://arxiv.org/html/2602.14110v1/x1.png" alt="MixFormer 整体架构" />
+  <figcaption>MixFormer 整体架构（来源：arXiv 2602.14110 Fig.1）。$N$ 个特征 head → Query Mixer → Cross-Attention 读序列 → Output Fusion。</figcaption>
+</figure>
+
+<figure>
+  <img src="https://arxiv.org/html/2602.14110v1/x2.png" alt="User-Item Decoupling" />
+  <figcaption>MixFormer User-Item Decoupling 的方向性 mask（来源：arXiv 2602.14110 Fig.2）。$N_U$ 个 user-side heads 与 $N_G$ 个 item-side heads 用方向性 mask 控制信息流，实现 request-level batching。</figcaption>
+</figure>
+
+<!-- ================= PART V ================= -->
+<h2 id="part5">Part V · 一句话总结</h2>
+
+<div class="callout" style="background:#e8f0fe;border-color:#a8c7fa;border-left-color:#1a73e8">
+<ol style="margin:6px 0 6px 18px">
+  <li><strong>$T$ 不是纯拍的</strong>：被 FLOPs 预算、Token Mixing 整除性、Per-token FFN 粒度、GPU 硬件对齐、scaling law 曲线五条约束挤到 $\{8,16,32,64\}$ 几个离散值，论文选 16/32 是 <em>head dim 锁到 48</em> 的硬件友好选择。</li>
+  <li><strong>$Td^2$ 怎么变取决于你固定什么</strong>：固定 $E=Td$ → $1/T$ 下降；固定 $d$ → 线性上升；论文实际两者同扩。</li>
+  <li><strong>Scaling law 的斜率 = 兑换率</strong>（未来潜力）；<strong>截距 = 起跑线</strong>（当下胜负）。</li>
+  <li><strong>四大架构的 scaling 定位</strong>：
+    <ul>
+      <li>RankMixer 比前代斜率陡（FI 领域内的升级）；</li>
+      <li>OneTrans 斜率 > RankMixer（统一 backbone 带来的"未来价值"）；</li>
+      <li>MixFormer 斜率持平、截距更高（<em>现在就比你强</em>）；</li>
+      <li>LONGER 三轴均强 power-law，但没画跨架构对比。</li>
+    </ul>
+  </li>
+</ol>
+</div>
+
+<footer>
+  生成于 cc_paper 仓库 · 配套四篇架构笔记与对比文档<br />
+  数学由 <a href="https://www.mathjax.org/">MathJax</a> 渲染 · 图片来源：arXiv 2507.15551（RankMixer）、arXiv 2602.14110（MixFormer）
+</footer>
+
+</div>
+</body>
+</html>
