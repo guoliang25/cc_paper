@@ -6,7 +6,9 @@
 
 | 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
 |------|------|------|------|----------|------|
+| 2023.03 | MoRec | 西湖大学 | 模态vsID推荐 | [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/abs/2303.13835) | [笔记](paper/2023/2303-MoRec-西湖大学-模态vsID推荐.md) |
 | 2023.05 | TIGER | Google DeepMind | 生成式推荐 | [Recommender Systems with Generative Retrieval](https://arxiv.org/abs/2305.05065) | [笔记](paper/2023/2305-TIGER-Google-生成式推荐.md) |
+| 2024.09 | HLLM | 字节跳动 | LLM序列推荐 | [HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling](https://arxiv.org/abs/2409.12740) | [笔记](paper/2024/2409-HLLM-字节-LLM序列推荐.md) |
 | 2025.05 | GatedAttention | Qwen Team / 阿里 | 注意力机制 | [Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free](https://arxiv.org/abs/2505.06708) | [笔记](paper/2025/2505-GatedAttention-Qwen-注意力机制.md) |
 | 2025.05 | LONGER | 字节跳动 | 长序列建模 | [LONGER: Scaling Up Long Sequence Modeling in Industrial Recommenders](https://arxiv.org/abs/2505.04421) | [笔记](paper/2025/2505-LONGER-字节-长序列建模.md) |
 | 2025.07 | RankMixer | 字节跳动 | 推荐系统Scaling | [RankMixer: Scaling Up Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2507.15551) | [笔记](paper/2025/2507-RankMixer-字节-推荐系统Scaling.md) |
