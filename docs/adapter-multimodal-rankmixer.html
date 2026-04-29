@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Adapter 迁移到推荐系统 · 多模态序列 × RankMixer 的落地方案</title>
+
+<!-- MathJax 渲染 LaTeX -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<!-- Mermaid -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2328;
+    --muted: #6a737d;
+    --accent: #0969da;
+    --accent-soft: #ddf4ff;
+    --border: #d0d7de;
+    --code-bg: #f6f8fa;
+    --callout-bg: #fff8c5;
+    --callout-border: #ffdf5d;
+    --good: #1a7f37;
+    --bad: #cf222e;
+    --neutral: #9a6700;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.75;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 48px 24px 120px; }
+  header { border-bottom: 2px solid var(--border); padding-bottom: 16px; margin-bottom: 32px; }
+  header h1 { margin: 0 0 8px; font-size: 1.7em; line-height: 1.35; }
+  header .meta { color: var(--muted); font-size: 0.95em; }
+  h2 { margin-top: 52px; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-size: 1.35em; }
+  h3 { margin-top: 30px; font-size: 1.1em; }
+  h4 { margin-top: 20px; font-size: 1em; color: var(--accent); }
+  p  { margin: 10px 0; }
+  code {
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+    font-size: 0.92em; font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 14px 18px; overflow-x: auto; font-size: 0.88em; line-height: 1.55;
+  }
+  pre code { background: transparent; padding: 0; }
+  blockquote {
+    border-left: 4px solid var(--accent); background: var(--accent-soft);
+    margin: 16px 0; padding: 10px 18px; color: #0a3069; border-radius: 0 6px 6px 0;
+  }
+  .callout {
+    background: var(--callout-bg); border: 1px solid var(--callout-border);
+    border-left: 4px solid #d4a72c; padding: 12px 18px; margin: 20px 0; border-radius: 0 6px 6px 0;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 0.94em; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f0f3f6; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  figure {
+    margin: 24px 0; text-align: center; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+  }
+  figure img { max-width: 100%; border-radius: 4px; }
+  figcaption { margin-top: 10px; color: var(--muted); font-size: 0.88em; font-style: italic; }
+  .mermaid {
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px; margin: 18px 0; text-align: center;
+  }
+  .toc {
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px 28px; margin: 32px 0 48px;
+  }
+  .toc h3 { margin: 0 0 10px; font-size: 1em; color: var(--fg); }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .ratio-up   { display:inline-block; padding:1px 8px; border-radius:10px; font-size:0.82em; font-weight:600; background:#dafbe1; color:var(--good); }
+  .ratio-down { display:inline-block; padding:1px 8px; border-radius:10px; font-size:0.82em; font-weight:600; background:#ffebe9; color:var(--bad); }
+  .ratio-eq   { display:inline-block; padding:1px 8px; border-radius:10px; font-size:0.82em; font-weight:600; background:#fff8c5; color:var(--neutral); }
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.88em; text-align: center; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>Adapter 迁移到推荐系统 · 多模态序列 × RankMixer 的落地方案</h1>
+  <div class="meta">
+    基于 <a href="https://arxiv.org/abs/1902.00751">Houlsby et al. ICML 2019</a> 的 Adapter 奠基工作，展开到推荐系统的四条迁移路径，
+    并针对 "RankMixer 基线 + 多模态用户序列" 的真实工业场景给出具体可落地的 Adapter 方案。
+  </div>
+</header>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#part1">Part I · NLP 里 Adapter 具体是怎么做的</a></li>
+    <li><a href="#part2">Part II · Adapter 迁移到推荐系统的四条路径</a></li>
+    <li><a href="#part3">Part III · 多模态序列 × RankMixer 的 Adapter 方案（主推）</a></li>
+    <li><a href="#part4">Part IV · 落地 checklist</a></li>
+    <li><a href="#part5">一句话总结</a></li>
+  </ol>
+</div>
+
+<!-- ==================== PART I ==================== -->
+<h2 id="part1">Part I · NLP 里 Adapter 具体是怎么做的</h2>
+
+<h3>1. Adapter 模块本体：一个最浅的 bottleneck</h3>
+
+<p>数学定义（$h$ 是 sub-layer 输出，$d$ 是 hidden dim，$m$ 是 bottleneck dim，$m \ll d$）：</p>
+
+$$\text{Adapter}(h) = h + W_\text{up}\,\sigma(W_\text{down}\,h)$$
+
+<p>张量形状流（BERT-base $d=768$、$m=64$）：</p>
+
+<table>
+  <thead>
+    <tr><th>步骤</th><th>输入</th><th>操作</th><th>输出</th><th>参数量</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Input</td><td>$[B, L, d]$</td><td>—</td><td>$[B, L, d]$</td><td>—</td></tr>
+    <tr><td>Down-project</td><td>$[B, L, d]$</td><td>$h W_\text{down}^T + b$</td><td>$[B, L, m]$</td><td>$dm + m$</td></tr>
+    <tr><td>Nonlinearity</td><td>$[B, L, m]$</td><td>GeLU</td><td>$[B, L, m]$</td><td>0</td></tr>
+    <tr><td>Up-project</td><td>$[B, L, m]$</td><td>$\cdot W_\text{up}^T + b$</td><td>$[B, L, d]$</td><td>$md + d$</td></tr>
+    <tr><td>Skip-connection</td><td>$[B, L, d]$</td><td>$+ h$</td><td>$[B, L, d]$</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<p>总参数 $2md + d + m \approx 100\text{K}$，对比一个 FFN 的 ~4.7M，Adapter 只占 <strong>~2%</strong>。</p>
+
+<h3>2. 论文原始架构图</h3>
+
+<figure>
+  <img src="https://arxiv.org/html/1902.00751v2/x1.png" alt="Adapter 结构图 (arXiv 1902.00751 Figure 2)"/>
+  <figcaption>
+    Adapter 结构图（arXiv:1902.00751 Figure 2）。<strong>左</strong>：每个 Transformer 层的 MHA 和 FFN 各插一个 Adapter；
+    <strong>右</strong>：Adapter 内部结构，down-project → 非线性 → up-project，带 skip-connection。训练时只更新绿色部分
+    （Adapter + LayerNorm + 任务头），冻结 BERT 主干。
+  </figcaption>
+</figure>
+
+<h3>3. 插在 Transformer 的哪里</h3>
+
+<div class="mermaid">
+flowchart TB
+    X[输入 x] --> LN1[LayerNorm]
+    LN1 --> MHA[Multi-Head Attention]
+    MHA --> AD1["★ Adapter 1<br/>down → GeLU → up + skip"]
+    AD1 --> ADD1[Add Residual]
+    X --> ADD1
+    ADD1 --> LN2[LayerNorm]
+    LN2 --> FFN[Feed Forward]
+    FFN --> AD2["★ Adapter 2<br/>down → GeLU → up + skip"]
+    AD2 --> ADD2[Add Residual]
+    ADD1 --> ADD2
+    ADD2 --> OUT[输出]
+
+    style AD1 fill:#fff3e0,stroke:#fb8c00,stroke-width:2px
+    style AD2 fill:#fff3e0,stroke:#fb8c00,stroke-width:2px
+    style MHA fill:#e3f2fd,stroke:#1976d2
+    style FFN fill:#e3f2fd,stroke:#1976d2
+</div>
+
+<p>关键细节：</p>
+<ul>
+  <li>Adapter 插在 <strong>sub-layer 输出之后、残差相加之前</strong>（接管"sub-layer 的增量信号"）</li>
+  <li>每层有两个 Adapter（MHA 后一个 + FFN 后一个），BERT-base 12 层 → 共 24 个 Adapter</li>
+</ul>
+
+<h3>4. Near-Identity 初始化（最重要但最容易被忽略的细节）</h3>
+
+<p>$W_\text{down}, W_\text{up}$ 用 zero-mean Gaussian 初始化，$\text{std}=10^{-2}$：</p>
+
+$$W_\text{down}, W_\text{up} \sim \mathcal{N}(0, 10^{-4})\text{ truncated}$$
+
+<p>训练第 0 步时 $W_\text{up}\sigma(W_\text{down}h) \approx 0$，整个 Adapter 输出 $\approx h$——<strong>恒等变换</strong>。所以：</p>
+<ul>
+  <li>带 Adapter 的模型在 step 0 时性能 = 原始冻结 BERT</li>
+  <li>Adapter 在训练中 <em>逐步"激活"</em>，不会扰坏预训练权重</li>
+  <li>消融显示 $\text{std} \le 10^{-2}$ 都稳，$>10^{-2}$ 开始不稳</li>
+</ul>
+
+<h3>5. 训练时谁被训、谁被冻</h3>
+
+<table>
+  <thead><tr><th>组件</th><th>状态</th><th>参数占比</th></tr></thead>
+  <tbody>
+    <tr><td>MHA 的 $W_Q, W_K, W_V, W_O$</td><td><span class="ratio-down">冻结</span></td><td>大头</td></tr>
+    <tr><td>FFN 权重</td><td><span class="ratio-down">冻结</span></td><td>大头</td></tr>
+    <tr><td>Token / Position Embedding</td><td><span class="ratio-down">冻结</span></td><td>中</td></tr>
+    <tr><td><strong>Adapter 的 $W_\text{down}, W_\text{up}, b$</strong></td><td><span class="ratio-up">训练</span></td><td>~3%</td></tr>
+    <tr><td><strong>每层 LayerNorm $\gamma, \beta$</strong></td><td><span class="ratio-up">训练</span></td><td>&lt;0.1%</td></tr>
+    <tr><td><strong>任务分类头</strong></td><td><span class="ratio-up">训练</span></td><td>&lt;0.1%</td></tr>
+  </tbody>
+</table>
+
+<h3>6. 10 行 PyTorch 实现</h3>
+
+<pre><code>class Adapter(nn.Module):
+    def __init__(self, d, m):
+        super().__init__()
+        self.down = nn.Linear(d, m)
+        self.up   = nn.Linear(m, d)
+        nn.init.normal_(self.down.weight, std=1e-2)
+        nn.init.normal_(self.up.weight,   std=1e-2)   # 近零初始化
+        nn.init.zeros_(self.down.bias)
+        nn.init.zeros_(self.up.bias)
+        self.act = nn.GELU()
+
+    def forward(self, h):
+        return h + self.up(self.act(self.down(h)))    # skip-connection
+</code></pre>
+
+<h3>7. GLUE 上的核心结果</h3>
+
+<table>
+  <thead>
+    <tr><th>方法</th><th>9 任务总参数</th><th>每任务新参数</th><th>GLUE 平均分</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Full Fine-tune</td><td>9.0× BERT</td><td>100%</td><td>80.4</td></tr>
+    <tr><td><strong>Adapter</strong> (size 8–256)</td><td><strong>1.3× BERT</strong></td><td><strong>3.6%</strong></td><td><strong>80.0</strong></td></tr>
+    <tr><td>Adapter (fixed size 64)</td><td>1.2× BERT</td><td>2.1%</td><td>79.6</td></tr>
+  </tbody>
+</table>
+
+<blockquote>
+<strong>结论</strong>：只加 3.6% 参数，Adapter 达到 full fine-tune 99.5% 的性能。这就是 <strong>PEFT（Parameter-Efficient Fine-Tuning）家族的起点</strong>——LoRA / Prefix Tuning / IA³ / QLoRA 都是在这条路上的演化。
+</blockquote>
+
+<!-- ==================== PART II ==================== -->
+<h2 id="part2">Part II · Adapter 迁移到推荐系统的四条路径</h2>
+
+<p>Adapter 的三个核心特性——<strong>任务隔离、在线增量、小参数开销</strong>——对推荐系统几乎是"天生契合"。有四条迁移路径，按"从最简单到最激进"排列：</p>
+
+<div class="mermaid">
+flowchart LR
+    A["<b>路径 1</b><br/>多任务<br/>Adapter"] --> B["<b>路径 2</b><br/>多场景<br/>Adapter"]
+    B --> C["<b>路径 3</b><br/>LLM-based<br/>任务 Adapter"]
+    C --> D["<b>路径 4</b><br/>多模态序列<br/>Cross-Attn Adapter"]
+
+    style A fill:#e8f5e9,stroke:#43a047
+    style B fill:#fff3e0,stroke:#fb8c00
+    style C fill:#e3f2fd,stroke:#1976d2
+    style D fill:#f3e5f5,stroke:#8e24aa,stroke-width:3px
+</div>
+
+<h3>路径 1 · 多任务 Ranking 里的任务专属 Adapter</h3>
+
+<p><strong>现状问题</strong>：CTR / CVR / 停留时长 / 完播率 / 点赞率通常共享 backbone（比如 RankMixer），然后每个任务一个 Tower。但 Tower 容量有限，用大 Tower 又会让共享部分的梯度被稀释。</p>
+
+<div class="mermaid">
+flowchart LR
+    RM["<b>Shared RankMixer</b><br/>(冻结或低 LR)"]
+    RM --> AC[Adapter_CTR] --> TC[Tower_CTR] --> LC[CTR logit]
+    RM --> AV[Adapter_CVR] --> TV[Tower_CVR] --> LV[CVR logit]
+    RM --> AW[Adapter_WatchTime] --> TW[Tower_WT] --> RW[回归]
+    RM --> AL[Adapter_Like] --> TL[Tower_Like] --> LL[Like logit]
+
+    style AC fill:#fff3e0,stroke:#fb8c00
+    style AV fill:#fff3e0,stroke:#fb8c00
+    style AW fill:#fff3e0,stroke:#fb8c00
+    style AL fill:#fff3e0,stroke:#fb8c00
+    style RM fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+</div>
+
+<p><strong>收益</strong>：</p>
+<ul>
+  <li>新增任务不影响旧任务（迁移保证）</li>
+  <li>任务专属参数 10–100× 于单层 Tower</li>
+  <li>训练数据少的任务（评论、转发）可共享主任务的 backbone</li>
+</ul>
+
+<h3>路径 2 · 多场景 Ranking 里的场景 Adapter</h3>
+
+<p><strong>现状问题</strong>：Feeds / Mall / 搜索 / 直播 / 广告 每个场景独立训模型——数据重复、算力浪费、冷启动难。OneTrans / MixFormer 已经在用 "unified backbone" 解决前两个问题，但场景差异如何体现？</p>
+
+<div class="mermaid">
+flowchart TB
+    I[同一请求]
+    I --> F[场景 Feeds]
+    I --> M[场景 Mall]
+    I --> S[场景 搜索]
+    I --> L[场景 直播]
+
+    F --> BK["<b>Shared Backbone</b><br/>(OneTrans / MixFormer)"]
+    M --> BK
+    S --> BK
+    L --> BK
+
+    BK --> AF[Adapter_Feeds]
+    BK --> AM[Adapter_Mall]
+    BK --> AS[Adapter_Search]
+    BK --> AL[Adapter_Live]
+
+    AF --> TF[Tower & logit]
+    AM --> TM[Tower & logit]
+    AS --> TS[Tower & logit]
+    AL --> TL[Tower & logit]
+
+    style AF fill:#fff3e0,stroke:#fb8c00
+    style AM fill:#fff3e0,stroke:#fb8c00
+    style AS fill:#fff3e0,stroke:#fb8c00
+    style AL fill:#fff3e0,stroke:#fb8c00
+    style BK fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+</div>
+
+<p><strong>关键点</strong>：Adapter 插在 backbone 的<strong>每一层</strong>（类似 NLP 的做法），让场景差异能在深层体现；新场景冷启动用"相似场景 Adapter"初始化。<strong>对比 PEPNet / STAR</strong>：Adapter 方案在"可扩展性和任务隔离"上更干净。</p>
+
+<h3>路径 3 · LLM-based Recommender 里的任务 Adapter（最贴近 NLP 原意）</h3>
+
+<p>这是 Adapter 最"像它本来长的样子"的推荐场景：</p>
+
+<div class="mermaid">
+flowchart TB
+    T[Item text]
+    T --> IL["<b>Item LLM</b><br/>(1B-7B, 冻结)"]
+    IL --> AI[Adapter_Item 任务/行业]
+    AI --> IE[item embedding]
+
+    IE --> UL["<b>User LLM</b><br/>(1B-7B, 冻结)"]
+    UL --> AU[Adapter_User 任务/场景]
+    AU --> UE[user representation]
+
+    UE --> TASK[CTR / CVR / ...]
+
+    style IL fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style UL fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style AI fill:#fff3e0,stroke:#fb8c00
+    style AU fill:#fff3e0,stroke:#fb8c00
+</div>
+
+<p><strong>工程意义</strong>：HLLM 主干 7B 冻结（只存一份权重），每个推荐任务/行业/场景只训一组 Adapter（几 M 参数）。让 LLM-based Recommender 真的能下沉到百万级场景。</p>
+
+<!-- ==================== PART III ==================== -->
+<h2 id="part3">Part III · 多模态序列 × RankMixer 的 Adapter 方案（主推）</h2>
+
+<p>这是最贴合 "RankMixer 基线 + 多模态用户序列" 真实工业场景的方案。核心思想：<strong>把多模态序列建模做成一个带 Cross-Attention 的 Adapter，挂到冻结的 RankMixer 上</strong>——同时享受 Adapter 的"零风险增量"和 Cross-Attention 对长序列的聚合能力。</p>
+
+<h3>整体架构</h3>
+
+<div class="mermaid">
+flowchart TB
+    NS["非序列特征<br/>(user/item/context)"]
+    MM["多模态用户序列<br/>(L × d_mm)"]
+
+    NS --> FT[Feature Tokenization]
+    FT --> RB1["<b>RankMixer Block 1</b><br/>(冻结)"]
+    RB1 --> MA1["★ MM-Adapter 1 ★<br/>down → Cross-Attn → up + skip"]
+    MM -.KV.-> MA1
+    MA1 --> RB2["<b>RankMixer Block 2</b><br/>(冻结)"]
+    RB2 --> MA2["★ MM-Adapter 2 ★"]
+    MM -.KV.-> MA2
+    MA2 --> RBN["..."]
+    RBN --> MAN["★ MM-Adapter N ★"]
+    MM -.KV.-> MAN
+    MAN --> TW[Tower]
+    TW --> OUT[预测]
+
+    style MA1 fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
+    style MA2 fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
+    style MAN fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
+    style RB1 fill:#e3f2fd,stroke:#1976d2
+    style RB2 fill:#e3f2fd,stroke:#1976d2
+    style MM fill:#fff3e0,stroke:#fb8c00,stroke-width:2px
+</div>
+
+<h3>MM-Adapter 的内部结构</h3>
+
+<p>把 NLP 原版的 <code>down → activation → up</code> 改造成 <code>down → Cross-Attention → up</code>：</p>
+
+<div class="mermaid">
+flowchart TB
+    H["h_rank<br/>[B, T, d_rank]<br/>RankMixer 输出"]
+    KV["多模态序列<br/>[B, L, d_mm]"]
+
+    H --> D[Down-project<br/>Linear d_rank → m]
+    D --> Z1["z<br/>[B, T, m]"]
+    Z1 --> CA[Multi-Head Cross-Attention<br/>Q=z, K=V=MM seq]
+    KV --> CA
+    CA --> Z2["z'<br/>[B, T, m]"]
+    Z2 --> U[Up-project<br/>Linear m → d_rank]
+    U --> OUT1["Δh<br/>[B, T, d_rank]"]
+    OUT1 --> ADD["+"]
+    H --> ADD
+    ADD --> FINAL["最终输出<br/>h_rank + Δh"]
+
+    style D fill:#fff3e0,stroke:#fb8c00
+    style CA fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style U fill:#fff3e0,stroke:#fb8c00
+    style FINAL fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+</div>
+
+<h3>公式化定义</h3>
+
+<p>设 RankMixer 第 $\ell$ 层输出为 $H^{(\ell)} \in \mathbb{R}^{B \times T \times d_\text{rank}}$，多模态序列编码为 $M \in \mathbb{R}^{B \times L \times d_\text{mm}}$。MM-Adapter 的计算流：</p>
+
+$$Z = H^{(\ell)} W_\text{down} \in \mathbb{R}^{B \times T \times m}$$
+
+$$Z' = \text{MultiHeadAttn}(Q=Z,\ K=M W_K,\ V=M W_V)$$
+
+$$H^{(\ell+1)} = H^{(\ell)} + Z' W_\text{up}$$
+
+<p>其中 $W_\text{down} \in \mathbb{R}^{d_\text{rank} \times m}$、$W_\text{up} \in \mathbb{R}^{m \times d_\text{rank}}$，遵循 <strong>近零初始化</strong>。</p>
+
+<h3>PyTorch 实现</h3>
+
+<pre><code>class MultiModalAdapter(nn.Module):
+    """
+    Cross-Attention Adapter for injecting multimodal sequence info
+    into a frozen RankMixer backbone.
+    """
+    def __init__(self, d_rank, d_mm, m=64, n_heads=4):
+        super().__init__()
+        self.down = nn.Linear(d_rank, m)
+        self.mm_attn = nn.MultiheadAttention(
+            embed_dim=m, num_heads=n_heads,
+            kdim=d_mm, vdim=d_mm, batch_first=True
+        )
+        self.up = nn.Linear(m, d_rank)
+
+        # Near-identity init: Adapter 启动时输出 ~ 0，不扰动 RankMixer
+        nn.init.normal_(self.down.weight, std=1e-2)
+        nn.init.normal_(self.up.weight,   std=1e-2)
+        nn.init.zeros_(self.down.bias)
+        nn.init.zeros_(self.up.bias)
+
+    def forward(self, h_rank, mm_seq_kv, mm_key_padding_mask=None):
+        """
+        h_rank:       [B, T, d_rank]   RankMixer 中间层输出 (T 个特征 token)
+        mm_seq_kv:    [B, L, d_mm]     多模态序列编码 (L 个行为 token)
+        mm_key_padding_mask: [B, L]    可选，屏蔽 padding
+        """
+        z = self.down(h_rank)                    # [B, T, m]
+        z_out, _ = self.mm_attn(
+            query=z, key=mm_seq_kv, value=mm_seq_kv,
+            key_padding_mask=mm_key_padding_mask
+        )                                        # [B, T, m]
+        return h_rank + self.up(z_out)           # residual
+</code></pre>
+
+<h3>三阶段训练策略（风险可控、易回滚）</h3>
+
+<div class="mermaid">
+flowchart LR
+    S1["<b>Stage 1</b><br/>只跑 RankMixer baseline<br/>固化主指标"]
+    S2["<b>Stage 2</b><br/>冻 RankMixer<br/>只训 MM-Adapter<br/>(验证价值)"]
+    S3["<b>Stage 3</b><br/>联合 fine-tune<br/>RankMixer 低 LR<br/>MM-Adapter 高 LR"]
+    S1 --> S2 --> S3
+
+    style S1 fill:#e8f5e9,stroke:#43a047
+    style S2 fill:#fff3e0,stroke:#fb8c00
+    style S3 fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
+</div>
+
+<table>
+  <thead>
+    <tr><th>阶段</th><th>冻结</th><th>训练</th><th>LR</th><th>目的</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Stage 1</td>
+      <td>—</td>
+      <td>RankMixer 全量</td>
+      <td>$10^{-3}$</td>
+      <td>baseline 指标，对照组</td>
+    </tr>
+    <tr>
+      <td>Stage 2</td>
+      <td>RankMixer + 多模态 encoder</td>
+      <td>MM-Adapter + Tower</td>
+      <td>$10^{-3}$</td>
+      <td>验证多模态信号是否有增量</td>
+    </tr>
+    <tr>
+      <td>Stage 3</td>
+      <td>多模态 encoder 可选冻结</td>
+      <td>RankMixer ($10^{-5}$) + MM-Adapter ($10^{-3}$) + Tower</td>
+      <td>差 2 个数量级</td>
+      <td>联合微调，榨取最后几个点</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>这个方案相比之前四种（Stacked / Parallel / Unified / Token Injection）的额外优势</h3>
+
+<table>
+  <thead>
+    <tr><th>维度</th><th>Adapter 方案</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>改动面</strong></td><td>不改 RankMixer Block 内部，只在 block 之间插 Adapter</td></tr>
+    <tr><td><strong>可回滚性</strong></td><td>MM-Adapter 丢弃 = 立即回到 RankMixer baseline</td></tr>
+    <tr><td><strong>多种模态组合</strong></td><td>视觉 Adapter / 音频 Adapter / 文本 Adapter 可独立开关</td></tr>
+    <tr><td><strong>多场景复用</strong></td><td>多模态 Adapter 跨场景共享；场景特化走另一组 Adapter</td></tr>
+    <tr><td><strong>工程/训练成本</strong></td><td>Stage 2 只训 Adapter，显存小、迭代快</td></tr>
+    <tr><td><strong>长尾友好</strong></td><td>MM 信号天然对冷启动 / 长尾 item 更友好，分桶评估应有显著增益</td></tr>
+  </tbody>
+</table>
+
+<!-- ==================== PART IV ==================== -->
+<h2 id="part4">Part IV · 落地 checklist</h2>
+
+<h3>NLP Adapter 原版要点</h3>
+
+<ul>
+  <li>☐ Bottleneck $m$：取 $d/16 \sim d/8$（$d=768$ 时选 $m=48\sim 96$）</li>
+  <li>☐ 非线性：GeLU（或 ReLU）</li>
+  <li>☐ Skip-connection：内层 Adapter 自己一个，外层残差流保留</li>
+  <li>☐ 初始化：$W_\text{down}, W_\text{up}$ zero-mean Gaussian std=$10^{-2}$，bias=0</li>
+  <li>☐ 冻谁训谁：主干全冻，只训 Adapter + LN + 任务头</li>
+  <li>☐ 插位：每个"主处理 block"的输出后各一个</li>
+  <li>☐ 学习率：Adapter LR 比主干 fine-tune 的 LR 高 ~10×</li>
+</ul>
+
+<h3>推荐系统 Adapter 工程 checklist</h3>
+
+<ul>
+  <li>☐ <strong>先跑 baseline</strong>，确认 RankMixer 主干指标稳定</li>
+  <li>☐ <strong>Stage 2 冻主干训 Adapter</strong>——快、便宜，能立即回答"Adapter 值不值"</li>
+  <li>☐ <strong>分长尾桶看指标</strong>——Adapter 对冷启动/新场景的增益应显著大于热门场景</li>
+  <li>☐ <strong>对比 Tower-only baseline</strong>——Adapter 必须超过"只扩大 Tower"才算有价值</li>
+  <li>☐ <strong>监控 Adapter 权重 norm</strong>——一直接近 0 = 没学到；爆炸 = 初始化太大</li>
+  <li>☐ <strong>保存/加载策略</strong>：Adapter 每任务独立存（几 MB），像配置文件一样管理</li>
+  <li>☐ <strong>A/B 关注长尾</strong>：Adapter 版作 treatment，原 baseline 作 control，重点看冷启动 / 新用户 / 长尾 item</li>
+</ul>
+
+<!-- ==================== PART V ==================== -->
+<h2 id="part5">Part V · 一句话总结</h2>
+
+<div class="callout" style="background:#e8f0fe;border-color:#a8c7fa;border-left-color:#1a73e8">
+<p><strong>NLP 里 Adapter</strong> = 在 Transformer 每个 sub-layer 后插一个 <em>down(d→m) → GeLU → up(m→d) + skip</em> 的极简 bottleneck，近零初始化保证启动时恒等，冻主干只训 Adapter（+ LN + 任务头），3% 参数拿到 99.5% 的性能。</p>
+
+<p><strong>迁移到推荐系统有四条路</strong>：多任务 Adapter（最简单）、多场景 Adapter（最通用）、LLM-based Recommender 里的任务 Adapter（最贴近 NLP 原意）、<strong>多模态序列作为 Cross-Attention Adapter 挂到 RankMixer</strong>（最贴合当前场景）。</p>
+
+<p><strong>对"RankMixer 基线 + 多模态序列"的场景，推荐第四条方案</strong>——先冻 RankMixer，把多模态信号做成一个带 Cross-Attention 的 Adapter 挂进去，分三阶段训练。这样既享受 Adapter 的"零风险增量"，又享受 Cross-Attention 对长序列的聚合能力，且完全可回滚。</p>
+</div>
+
+<footer>
+  专题配套：<a href="https://github.com/guoliang25/cc_paper/blob/main/paper/2019/1902-Adapter-Google-%E5%8F%82%E6%95%B0%E9%AB%98%E6%95%88%E5%BE%AE%E8%B0%83.md">Adapter 论文 Markdown 笔记</a>
+   · <a href="./rankmixer-T-and-scaling-slope-intercept.html">RankMixer 的 T 与 Scaling 斜率截距</a>
+   · <a href="./index.html">所有 HTML 专题</a><br/>
+  数学由 <a href="https://www.mathjax.org/">MathJax</a> 渲染 · 图表由 <a href="https://mermaid.js.org/">Mermaid</a> 渲染 · 图片来源：arXiv 1902.00751
+</footer>
+
+</div>
+</body>
+</html>
