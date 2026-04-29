@@ -6,6 +6,7 @@
 
 | 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
 |------|------|------|------|----------|------|
+| 2019.02 | Adapter | Google Research | 参数高效微调 | [Parameter-Efficient Transfer Learning for NLP](https://arxiv.org/abs/1902.00751) | [笔记](paper/2019/1902-Adapter-Google-参数高效微调.md) |
 | 2023.03 | MoRec | 西湖大学 | 模态vsID推荐 | [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/abs/2303.13835) | [笔记](paper/2023/2303-MoRec-西湖大学-模态vsID推荐.md) |
 | 2023.05 | TIGER | Google DeepMind | 生成式推荐 | [Recommender Systems with Generative Retrieval](https://arxiv.org/abs/2305.05065) | [笔记](paper/2023/2305-TIGER-Google-生成式推荐.md) |
 | 2024.09 | HLLM | 字节跳动 | LLM序列推荐 | [HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling](https://arxiv.org/abs/2409.12740) | [笔记](paper/2024/2409-HLLM-字节-LLM序列推荐.md) |
