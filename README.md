@@ -4,26 +4,67 @@
 
 ## 论文列表
 
+按领域分类整理，每个领域内按时间升序排列。
+
+### 🏗️ 工业 Ranking 主干与 Scaling
+
+> 大规模工业推荐 ranking 模型的主干架构与 scaling law 探索，重点关注参数、算力、token 数等多维度的 co-scaling。
+
+| 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
+|------|------|------|------|----------|------|
+| 2025.07 | RankMixer | 字节跳动 | 推荐系统 Scaling | [RankMixer: Scaling Up Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2507.15551) | [笔记](paper/2025/2507-RankMixer-字节-推荐系统Scaling.md) |
+| 2025.10 | OneTrans | 字节跳动 / NTU | 统一排序架构 | [OneTrans: Unified Feature Interaction and Sequence Modeling with One Transformer in Industrial Recommender](https://arxiv.org/abs/2510.26104) | [笔记](paper/2025/2510-OneTrans-字节-统一排序架构.md) |
+| 2026.02 | MixFormer | 字节跳动 | 推荐系统 Scaling | [MixFormer: Co-Scaling Up Dense and Sequence in Industrial Recommenders](https://arxiv.org/abs/2602.14110) | [笔记](paper/2026/2602-MixFormer-字节-推荐系统Scaling.md) |
+| 2026.02 | TokenMixer-Large | 字节跳动 | 推荐系统 Scaling | [TokenMixer-Large: Scaling Up Large Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2602.06563) | [笔记](paper/2026/2602-TokenMixerLarge-字节-推荐系统Scaling.md) |
+| 2026.04 | UniMixer | 快手 | 推荐系统 Scaling | [UniMixer: A Unified Architecture for Scaling Laws in Recommendation Systems](https://arxiv.org/abs/2604.00590) | [笔记](paper/2026/2604-UniMixer-快手-推荐系统Scaling.md) |
+
+### 📜 长序列与长行为建模
+
+> 工业场景下"几千到上万"用户历史的端到端建模，关注 $O(L^2)\to O(L)$ 复杂度优化、训推 decouple、KV cache 等。
+
+| 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
+|------|------|------|------|----------|------|
+| 2025.05 | LONGER | 字节跳动 | 长序列建模 | [LONGER: Scaling Up Long Sequence Modeling in Industrial Recommenders](https://arxiv.org/abs/2505.04421) | [笔记](paper/2025/2505-LONGER-字节-长序列建模.md) |
+| 2025.11 | STCA | 字节跳动 | 10K 长序列建模 | [Make It Long, Keep It Fast: End-to-End 10k-Sequence Modeling at Billion Scale on Douyin Recommendation](https://arxiv.org/abs/2511.06077) | [笔记](paper/2025/2511-STCA-字节-10K长序列建模.md) |
+
+### 🎯 生成式推荐
+
+> 以 LLM-style 自回归 / 扩散 / VAE 等方式做"生成 item"而非"打分排序"的范式探索，多用 Semantic ID 表征 item。
+
+| 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
+|------|------|------|------|----------|------|
+| 2023.05 | TIGER | Google DeepMind | 生成式推荐 | [Recommender Systems with Generative Retrieval](https://arxiv.org/abs/2305.05065) | [笔记](paper/2023/2305-TIGER-Google-生成式推荐.md) |
+| 2025.11 | MaskGR | Snap / UT Austin | 生成式推荐 | [Masked Diffusion for Generative Recommendation](https://arxiv.org/abs/2511.23021) | [笔记](paper/2025/2511-MaskGR-Snap-生成式推荐.md) |
+| 2026.04 | R³-VAE | 字节跳动 | 生成式推荐 SID | [R³-VAE: Reference Vector-Guided Rating Residual Quantization VAE for Generative Recommendation](https://arxiv.org/abs/2604.11440) | [笔记](paper/2026/2604-R3VAE-字节-生成式推荐SID.md) |
+
+### 🌐 多模态 / LLM 推荐
+
+> 用语言模型 / 多模态 backbone 替代或补充传统 ID 推荐，覆盖模态 vs ID 范式之争、LLM 序列推荐、ID-Text 融合、冷启动等。
+
+| 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
+|------|------|------|------|----------|------|
+| 2023.03 | MoRec | 西湖大学 | 模态 vs ID 推荐 | [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/abs/2303.13835) | [笔记](paper/2023/2303-MoRec-西湖大学-模态vsID推荐.md) |
+| 2024.09 | HLLM | 字节跳动 | LLM 序列推荐 | [HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling](https://arxiv.org/abs/2409.12740) | [笔记](paper/2024/2409-HLLM-字节-LLM序列推荐.md) |
+| 2025.12 | EnsRec | Snap | ID-Text 序列推荐 | [Exploiting ID-Text Complementarity via Ensembling for Sequential Recommendation](https://arxiv.org/abs/2512.17820) | [笔记](paper/2025/2512-EnsRec-Snap-序列推荐.md) |
+| 2026.03 | IDProxy | 小红书 | 冷启动 CTR | [IDProxy: Cold-Start CTR Prediction for Ads and Recommendation at Xiaohongshu with Multimodal LLMs](https://arxiv.org/abs/2603.01590) | [笔记](paper/2026/2603-IDProxy-小红书-冷启动CTR.md) |
+
+### 🔍 检索与搜索 Ranking
+
+> 召回/集合检索、短视频搜索等独立于精排主干的检索阶段工作。
+
+| 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
+|------|------|------|------|----------|------|
+| 2026.03 | R4T | UIUC / Google DeepMind | 集合检索 | [Efficient, Property-Aligned Fan-Out Retrieval via RL-Compiled Diffusion](https://arxiv.org/abs/2603.06397) | [笔记](paper/2026/2603-R4T-UIUC&Google-集合检索.md) |
+| 2026.04 | SID-Coord | 快手 | 短视频搜索 Ranking | [SID-Coord: Coordinating Semantic IDs for ID-based Ranking in Short-Video Search](https://arxiv.org/abs/2604.10471) | [笔记](paper/2026/2604-SIDCoord-快手-短视频搜索Ranking.md) |
+
+### 🧩 基础模块（注意力 / 参数高效微调）
+
+> 服务于上述工作的通用基础组件——参数高效迁移、注意力机制改进等，可跨领域复用。
+
 | 日期 | 方法 | 机构 | 领域 | 论文标题 | 笔记 |
 |------|------|------|------|----------|------|
 | 2019.02 | Adapter | Google Research | 参数高效微调 | [Parameter-Efficient Transfer Learning for NLP](https://arxiv.org/abs/1902.00751) | [笔记](paper/2019/1902-Adapter-Google-参数高效微调.md) |
-| 2023.03 | MoRec | 西湖大学 | 模态vsID推荐 | [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/abs/2303.13835) | [笔记](paper/2023/2303-MoRec-西湖大学-模态vsID推荐.md) |
-| 2023.05 | TIGER | Google DeepMind | 生成式推荐 | [Recommender Systems with Generative Retrieval](https://arxiv.org/abs/2305.05065) | [笔记](paper/2023/2305-TIGER-Google-生成式推荐.md) |
-| 2024.09 | HLLM | 字节跳动 | LLM序列推荐 | [HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling](https://arxiv.org/abs/2409.12740) | [笔记](paper/2024/2409-HLLM-字节-LLM序列推荐.md) |
 | 2025.05 | GatedAttention | Qwen Team / 阿里 | 注意力机制 | [Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free](https://arxiv.org/abs/2505.06708) | [笔记](paper/2025/2505-GatedAttention-Qwen-注意力机制.md) |
-| 2025.05 | LONGER | 字节跳动 | 长序列建模 | [LONGER: Scaling Up Long Sequence Modeling in Industrial Recommenders](https://arxiv.org/abs/2505.04421) | [笔记](paper/2025/2505-LONGER-字节-长序列建模.md) |
-| 2025.07 | RankMixer | 字节跳动 | 推荐系统Scaling | [RankMixer: Scaling Up Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2507.15551) | [笔记](paper/2025/2507-RankMixer-字节-推荐系统Scaling.md) |
-| 2025.10 | OneTrans | 字节跳动 / NTU | 统一排序架构 | [OneTrans: Unified Feature Interaction and Sequence Modeling with One Transformer in Industrial Recommender](https://arxiv.org/abs/2510.26104) | [笔记](paper/2025/2510-OneTrans-字节-统一排序架构.md) |
-| 2025.11 | MaskGR | Snap / UT Austin | 生成式推荐 | [Masked Diffusion for Generative Recommendation](https://arxiv.org/abs/2511.23021) | [笔记](paper/2025/2511-MaskGR-Snap-生成式推荐.md) |
-| 2025.11 | STCA | 字节跳动 | 10K长序列建模 | [Make It Long, Keep It Fast: End-to-End 10k-Sequence Modeling at Billion Scale on Douyin Recommendation](https://arxiv.org/abs/2511.06077) | [笔记](paper/2025/2511-STCA-字节-10K长序列建模.md) |
-| 2025.12 | EnsRec | Snap | 序列推荐 | [Exploiting ID-Text Complementarity via Ensembling for Sequential Recommendation](https://arxiv.org/abs/2512.17820) | [笔记](paper/2025/2512-EnsRec-Snap-序列推荐.md) |
-| 2026.02 | MixFormer | 字节跳动 | 推荐系统Scaling | [MixFormer: Co-Scaling Up Dense and Sequence in Industrial Recommenders](https://arxiv.org/abs/2602.14110) | [笔记](paper/2026/2602-MixFormer-字节-推荐系统Scaling.md) |
-| 2026.02 | TokenMixer-Large | 字节跳动 | 推荐系统Scaling | [TokenMixer-Large: Scaling Up Large Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2602.06563) | [笔记](paper/2026/2602-TokenMixerLarge-字节-推荐系统Scaling.md) |
-| 2026.03 | IDProxy | 小红书 | 冷启动CTR | [IDProxy: Cold-Start CTR Prediction for Ads and Recommendation at Xiaohongshu with Multimodal LLMs](https://arxiv.org/abs/2603.01590) | [笔记](paper/2026/2603-IDProxy-小红书-冷启动CTR.md) |
-| 2026.03 | R4T | UIUC / Google DeepMind | 集合检索 | [Efficient, Property-Aligned Fan-Out Retrieval via RL-Compiled Diffusion](https://arxiv.org/abs/2603.06397) | [笔记](paper/2026/2603-R4T-UIUC&Google-集合检索.md) |
-| 2026.04 | UniMixer | 快手 | 推荐系统Scaling | [UniMixer: A Unified Architecture for Scaling Laws in Recommendation Systems](https://arxiv.org/abs/2604.00590) | [笔记](paper/2026/2604-UniMixer-快手-推荐系统Scaling.md) |
-| 2026.04 | SID-Coord | 快手 | 短视频搜索Ranking | [SID-Coord: Coordinating Semantic IDs for ID-based Ranking in Short-Video Search](https://arxiv.org/abs/2604.10471) | [笔记](paper/2026/2604-SIDCoord-快手-短视频搜索Ranking.md) |
-| 2026.04 | R³-VAE | 字节跳动 | 生成式推荐SID | [R³-VAE: Reference Vector-Guided Rating Residual Quantization VAE for Generative Recommendation](https://arxiv.org/abs/2604.11440) | [笔记](paper/2026/2604-R3VAE-字节-生成式推荐SID.md) |
 
 ## 专题对比
 
