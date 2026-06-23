@@ -15,6 +15,7 @@
 | 2025.07 | RankMixer | 字节跳动 | 推荐系统Scaling | [RankMixer: Scaling Up Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2507.15551) | [笔记](paper/2025/2507-RankMixer-字节-推荐系统Scaling.md) |
 | 2025.10 | OneTrans | 字节跳动 / NTU | 统一排序架构 | [OneTrans: Unified Feature Interaction and Sequence Modeling with One Transformer in Industrial Recommender](https://arxiv.org/abs/2510.26104) | [笔记](paper/2025/2510-OneTrans-字节-统一排序架构.md) |
 | 2025.11 | MaskGR | Snap / UT Austin | 生成式推荐 | [Masked Diffusion for Generative Recommendation](https://arxiv.org/abs/2511.23021) | [笔记](paper/2025/2511-MaskGR-Snap-生成式推荐.md) |
+| 2025.11 | STCA | 字节跳动 | 10K长序列建模 | [Make It Long, Keep It Fast: End-to-End 10k-Sequence Modeling at Billion Scale on Douyin Recommendation](https://arxiv.org/abs/2511.06077) | [笔记](paper/2025/2511-STCA-字节-10K长序列建模.md) |
 | 2025.12 | EnsRec | Snap | 序列推荐 | [Exploiting ID-Text Complementarity via Ensembling for Sequential Recommendation](https://arxiv.org/abs/2512.17820) | [笔记](paper/2025/2512-EnsRec-Snap-序列推荐.md) |
 | 2026.02 | MixFormer | 字节跳动 | 推荐系统Scaling | [MixFormer: Co-Scaling Up Dense and Sequence in Industrial Recommenders](https://arxiv.org/abs/2602.14110) | [笔记](paper/2026/2602-MixFormer-字节-推荐系统Scaling.md) |
 | 2026.02 | TokenMixer-Large | 字节跳动 | 推荐系统Scaling | [TokenMixer-Large: Scaling Up Large Ranking Models in Industrial Recommenders](https://arxiv.org/abs/2602.06563) | [笔记](paper/2026/2602-TokenMixerLarge-字节-推荐系统Scaling.md) |
