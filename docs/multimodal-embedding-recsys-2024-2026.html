@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>多模态 Embedding × 推荐系统 · 2024-2026 工业落地综述</title>
+
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2328;
+    --muted: #6a737d;
+    --accent: #0969da;
+    --accent-soft: #ddf4ff;
+    --border: #d0d7de;
+    --code-bg: #f6f8fa;
+    --callout-bg: #fff8c5;
+    --callout-border: #ffdf5d;
+    --warn-bg: #ffebe9;
+    --warn-border: #ffaba8;
+    --good: #1a7f37;
+    --bad: #cf222e;
+    --neutral: #9a6700;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.75;
+  }
+  .container { max-width: 980px; margin: 0 auto; padding: 48px 24px 120px; }
+  header { border-bottom: 2px solid var(--border); padding-bottom: 16px; margin-bottom: 32px; }
+  header h1 { margin: 0 0 8px; font-size: 1.7em; line-height: 1.35; }
+  header .meta { color: var(--muted); font-size: 0.95em; }
+  h2 { margin-top: 52px; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-size: 1.35em; }
+  h3 { margin-top: 30px; font-size: 1.1em; }
+  h4 { margin-top: 20px; font-size: 1em; color: var(--accent); }
+  p  { margin: 10px 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+    font-size: 0.92em; font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 14px 18px; overflow-x: auto; font-size: 0.88em; line-height: 1.55;
+  }
+  blockquote {
+    border-left: 4px solid var(--accent); background: var(--accent-soft);
+    margin: 16px 0; padding: 10px 18px; color: #0a3069; border-radius: 0 6px 6px 0;
+  }
+  .callout {
+    background: var(--callout-bg); border: 1px solid var(--callout-border);
+    border-left: 4px solid #d4a72c; padding: 12px 18px; margin: 20px 0; border-radius: 0 6px 6px 0;
+  }
+  .warn {
+    background: var(--warn-bg); border: 1px solid var(--warn-border);
+    border-left: 4px solid var(--bad); padding: 12px 18px; margin: 20px 0; border-radius: 0 6px 6px 0;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 0.93em; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f0f3f6; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .toc {
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px 28px; margin: 32px 0 48px;
+  }
+  .toc h3 { margin: 0 0 10px; font-size: 1em; color: var(--fg); }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:0.78em; font-weight:600; margin-right:4px; }
+  .tag-prod { background:#dafbe1; color:var(--good); }
+  .tag-paper { background:#ddf4ff; color:var(--accent); }
+  .tag-warn { background:#ffebe9; color:var(--bad); }
+  .tag-blog { background:#fff8c5; color:var(--neutral); }
+  .up   { color:var(--good); font-weight:600; }
+  .down { color:var(--bad); font-weight:600; }
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.88em; text-align: center; }
+  .ref-list { font-size:0.9em; }
+  .ref-list li { margin: 6px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>多模态 Embedding × 推荐系统：2024–2026 工业落地综述</h1>
+  <div class="meta">编译于 2026-11-13 · 面向一线推荐算法工程师的技术选型参考 · 基于 deep-research fan-out + 对抗验证（11 条高置信论断、21/25 claim 通过 3 轮验证）</div>
+</header>
+
+<div class="callout">
+<b>TL;DR</b>　2024–2026 工业界多模态推荐的主旋律是「从冻结两阶段 → 端到端联合训练 / 适配器对齐 / 生成式语义 ID」三条路径同时演进。
+代表工作：
+<b>ByteDance LEMUR</b>（Douyin Search/Ads 端到端联合训练，CTR 梯度回传到多模态 Transformer）、
+<b>Xiaohongshu IDProxy</b>（冻结 MLLM + coarse-to-fine adapter + 残差门控，Content Feed & Display Ads 全量）、
+<b>ByteDance SAIL-Embedding</b>（LLM 作为 omni-modal 融合主干 + 推荐协同蒸馏）、
+<b>MMGRec / TIGER / OneRec</b> 代表的 RQ-VAE 语义 ID 生成式推荐、
+以及 <b>Zalando VCG</b> 证明的「冻结 CLIP + 近期性加权」在中长尾场景的最小可行形态（+50% 完播率全量上线）。
+<br/><br/>
+核心工程挑战收敛于三点：<b>防坍缩</b>（positional collapse）、<b>控漂移</b>（上游 MLLM 版本升级）、<b>压延迟</b>（MLLM 离线化为 knowledge provider）。
+</div>
+
+<div class="toc">
+<h3>目录</h3>
+<ol>
+  <li><a href="#bg">背景动机：为什么 2024-2026 多模态会卷到排序层</a></li>
+  <li><a href="#taxonomy">技术路径分类：四种接入方式 × 三种对齐范式</a></li>
+  <li><a href="#works">代表性工作对比</a></li>
+  <li><a href="#industry">工业落地实践：谁在生产跑什么</a></li>
+  <li><a href="#challenge">关键挑战与开放问题</a></li>
+  <li><a href="#refs">参考文献</a></li>
+</ol>
+</div>
+
+<h2 id="bg">1. 背景动机：为什么 2024-2026 多模态会卷到排序层</h2>
+
+<p>此前 3 年（2021-2023）多模态在推荐系统中的典型角色是<b>召回侧 side info</b> —— 用冻结的 CLIP / BERT / ViT 产出 item embedding 做 i2i 召回、相似度检索、冷启动兜底；排序层仍由海量 ID embedding + 行为序列 + target attention 承载主要权重。进入 2024 年后，这一分工被三股力量打破：</p>
+
+<ol>
+  <li><b>LLM / MLLM 的内容理解上限大幅抬升</b>，让「用文本/视觉表征直接驱动排序」第一次具备工程可行性，不再是 cold-start-only 的兜底方案。</li>
+  <li><b>ID embedding 的 scaling 边际开始收敛</b>：字节的 <a href="https://arxiv.org/abs/2507.RankMixer">RankMixer</a>、<a href="https://arxiv.org/abs/2510.OneTrans">OneTrans</a> 等架构都把 scaling 讨论推到 "token/parameter/data" 三轴，而 ID 侧的边际 token 质量已不如多模态内容侧。</li>
+  <li><b>生成式推荐（TIGER → OneRec）</b> 把 item ID 本身替换为「语义 ID 序列」，从接口上就要求内容理解必须深入到排序甚至生成环节。</li>
+</ol>
+
+<p>2026 年末的工业界共识是：<b>多模态 embedding 不再是"要不要用"的问题，而是"用哪条路径接入 + 如何对齐协同信号 + 如何控成本"的问题</b>。LEMUR 论文开篇即批评传统两阶段 pipeline 的「多模态目标与推荐目标错配」问题，并提出端到端联合优化（<a href="https://www.alphaxiv.org/abs/2511.10962">arXiv 2511.10962</a>）。</p>
+
+<h2 id="taxonomy">2. 技术路径分类：四种接入方式 × 三种对齐范式</h2>
+
+<h3>2.1 接入方式（Where）</h3>
+
+<table>
+  <thead>
+    <tr><th>接入位置</th><th>做法</th><th>代表工作</th><th>优势 / 代价</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>① 作为 Side Info 特征</td>
+      <td>多模态 embedding 单独走一列 MLP/投影，与 ID 特征 concat 后进入主模型</td>
+      <td>早期 CLIP+CTR 系列、PAD baseline</td>
+      <td>实现简单；但在大模型排序结构中几乎被 ID embedding "淹没"，IDProxy 消融显示这种 w/o Structure Reuse 方案仅 +0.08% AUC</td>
+    </tr>
+    <tr>
+      <td>② 替代 / 增强 ID Embedding</td>
+      <td>多模态 proxy 直接注入到排序模型的 item-ID 槽位、交互模块、target-attention 序列路径</td>
+      <td><b>Xiaohongshu IDProxy</b></td>
+      <td>复用已有排序结构的 "协同过滤先验"，消融显示 +0.14% AUC（比仅拼接高 75%）</td>
+    </tr>
+    <tr>
+      <td>③ 融合到用户序列</td>
+      <td>把用户历史 item 的多模态 embedding 作为序列 token，经自注意力/target attention</td>
+      <td>HLLM 家族、AlmostRec（LMM 做骨干）、Adapter-RankMixer</td>
+      <td>直接受益于 LLM-style scaling；但训练/推理开销显著上升</td>
+    </tr>
+    <tr>
+      <td>④ Cross-Attention / Adapter</td>
+      <td>多模态表征作为 Key/Value，排序模型 query；或通过轻量 adapter 模块做投影和融合</td>
+      <td>CPMM（<a href="https://acm-prod.literatumonline.com/doi/10.1016/j.neucom.2025.130059">Neurocomputing 2025</a>）、Adapter-to-RankMixer</td>
+      <td>模态可插拔、训练参数量小；但 adapter 容量上限决定了迁移效果上限</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>2.2 对齐范式（How）</h3>
+
+<p>通用多模态预训练（CLIP / InternVL / LLaVA / Qwen-VL）的表征空间与推荐协同空间天然存在 gap，<a href="https://acm-prod.literatumonline.com/doi/10.1016/j.neucom.2025.130059">CPMM</a> 等工作明确指出这个 gap 来自「预训练数据 ≠ 推荐数据」和「CLIP 不编码协同信号」。2024-2026 的三种主流对齐范式：</p>
+
+<table>
+  <thead>
+    <tr><th>对齐范式</th><th>核心思想</th><th>代表损失 / 机制</th><th>代表工作</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>A. 对比对齐</b>（InfoNCE / proxy）</td>
+      <td>把 MLLM 表征拉向排序模型 ID embedding 的分布</td>
+      <td>InfoNCE + 频次阈值过滤不可靠 ID；MLP adaptor + 残差门控</td>
+      <td><b>Xiaohongshu IDProxy</b>（<a href="https://arxiv.org/abs/2603.01590">arXiv 2603.01590</a>）</td>
+    </tr>
+    <tr>
+      <td><b>B. 分布对齐</b>（MMD / 分布级）</td>
+      <td>在分布级别而非样本级别匹配多模态与协同表征</td>
+      <td>Multi-Kernel MMD（5 Gaussian characteristic kernels）+ triple-expert 解耦</td>
+      <td><b>PAD</b>（CityU + Tencent, <a href="https://alphaxiv.org/abs/2412.04107">arXiv 2412.04107</a>）</td>
+    </tr>
+    <tr>
+      <td><b>C. 语义 ID 量化</b>（RQ-VAE）</td>
+      <td>把连续多模态表征量化为离散 "语义 token" 序列，接入自回归生成式推荐</td>
+      <td>Graph RQ-VAE 层次残差量化 → Rec-ID</td>
+      <td><b>MMGRec</b>（<a href="https://arxiv.org/abs/2404.16555">arXiv 2404.16555</a>）、TIGER、OneRec</td>
+    </tr>
+    <tr>
+      <td><b>D. 锚点对齐</b>（Anchor-based）</td>
+      <td>避免模态表征直接相互拉近导致的 positional collapse；用融合 projection 作为间接锚点</td>
+      <td>Anchor-Aligned Learning + Anchor-Modality Preservation</td>
+      <td><b>AnchorRec</b>（<a href="https://arxiv.org/pdf/2603.12726v1">arXiv 2603.12726</a>）</td>
+    </tr>
+    <tr>
+      <td><b>E. 端到端联合训练</b>（gradient-all-the-way）</td>
+      <td>CTR loss 的梯度直接回传到多模态 Transformer</td>
+      <td>20% 样本走完整反向 + memory-bank 缓存其余 80%</td>
+      <td><b>LEMUR</b>（ByteDance, CIKM 2026, <a href="https://www.alphaxiv.org/abs/2511.10962">arXiv 2511.10962</a>）</td>
+    </tr>
+    <tr>
+      <td><b>F. 协同蒸馏</b>（distill-from-production）</td>
+      <td>把生产侧多个 ID embedding 投影后与多模态表征对齐，兼顾 i2i 辅助任务</td>
+      <td>Collaboration-aware Recommendation Enhancement（sequence-to-item + ID-to-item）</td>
+      <td><b>SAIL-Embedding</b>（ByteDance Douyin, <a href="https://arxiv.org/abs/2510.12709">arXiv 2510.12709</a>）</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="works">3. 代表性工作对比</h2>
+
+<p>以下 6 个工作覆盖了 2025–2026 工业界 / 学术界的主要范式分支，均通过了 deep-research 的 3 轮对抗验证（部分为 2/0 置信）。</p>
+
+<h3>3.1 LEMUR — 端到端联合训练的旗帜 <span class="tag tag-prod">Douyin Search/Ads 已部署</span></h3>
+
+<ul>
+  <li><b>出处</b>：ByteDance, CIKM 2026 Applied Track（<a href="https://www.alphaxiv.org/abs/2511.10962">arXiv 2511.10962</a>）</li>
+  <li><b>核心机制</b>：CTR loss 的梯度直接回传到多模态 Transformer 的首层；为控成本只对 <b>20% 样本走完整前向/反向</b>，其余使用 memory-bank 缓存。训练样本 3B。</li>
+  <li><b>线上效果</b>：Douyin Search 14 天 A/B，T 检验显著，<span class="up">+0.81% QAUC</span>、<span class="up">-0.843% 查询改写率（QCR）</span>，自报增益为两阶段 baseline 的 <b>约 5 倍</b>；同期部署于 Douyin Advertisement。</li>
+  <li><b>水分警告</b>：论文宣称的 "end-to-end from raw data" 实际是 "采样式端到端"（仅 20% 完整反向），且视频输入前已经过 OCR/ASR/封面帧 caption 文本化，并非直接从像素端到端。</li>
+</ul>
+
+<h3>3.2 IDProxy — 冻结 MLLM + 适配器对齐的工程典范 <span class="tag tag-prod">小红书 Content Feed + Display Ads 全量</span></h3>
+
+<ul>
+  <li><b>出处</b>：Xiaohongshu + SJTU + Fudan, RecSys 2026 Industry Oral（<a href="https://acm-prod.literatumonline.com/doi/10.1145/3773078.3831874">ACM</a> / <a href="https://arxiv.org/abs/2603.01590">arXiv 2603.01590</a>）</li>
+  <li><b>两阶段 coarse-to-fine 框架</b>：
+    <ul>
+      <li><b>Stage 1 · Proxy Alignment Loss (PAL)</b>：InfoNCE 把 MLLM (InternVL) 投影拉向排序模型的 ID embedding，并用<b>频次阈值 τ</b> 过滤低频 ID 目标，防止把不可靠 ID 学成"锚"。</li>
+      <li><b>Stage 2 · Fine Proxy</b>：从 MLLM 的三层聚类（浅/中/深）抽取 hidden states，经 MLP adaptor 融合，再用 <code>σ(W_g·[coarse, fine])</code> <b>残差门控</b>，以 CTR loss 端到端微调（MLLM 保持冻结）。</li>
+    </ul>
+  </li>
+  <li><b>核心工程洞察（Structure Reuse）</b>：把 coarse/fine proxy <b>同时注入排序模型的 item-ID 槽位、特征交互模块、target-attention 序列路径</b>。消融 Table 1：
+    <ul>
+      <li>v4 w/o Structure Reuse（仅作为 side info 拼接）= <span class="up">+0.08% AUC</span></li>
+      <li>v5 Full = <span class="up">+0.14% AUC</span>（<b>+75% 相对提升</b>）</li>
+    </ul>
+    结论：<i>"内容信号必须接入排序模型已有的协同过滤结构，而非新增一列特征"</i>。
+  </li>
+  <li><b>线上效果</b>：Display Ads <span class="up">+1.28% impression / +1.93% ADVV / +1.73% cost / +0.23% CTR</span>；Content Feed <span class="up">+0.22% time spent</span>。</li>
+</ul>
+
+<h3>3.3 SAIL-Embedding — LLM 作 omni-modal 融合主干 <span class="tag tag-paper">ByteDance Douyin SAIL Team</span></h3>
+
+<ul>
+  <li><b>出处</b>：ByteDance + CUHK MMLab, 2025-10（<a href="https://arxiv.org/abs/2510.12709">arXiv 2510.12709</a>）</li>
+  <li><b>架构</b>：Vision Perceiver 把每帧压缩为 <b>16 latent tokens</b>；CLAP 编码音频；统一映射到 LLM token 空间，<b>LLM 本身作为 omni-modal fusion backbone</b>。</li>
+  <li><b>对齐推荐语义 — Collaboration-aware Recommendation Enhancement (CRE)</b>：
+    <ul>
+      <li><b>Sequence-to-item 对比</b>：Single-Peak / Multi-Peak collaboration-aware 变体</li>
+      <li><b>ID-to-item 蒸馏</b>：把<b>生产侧多个推荐系统的 ID embedding</b> 投影后与 omni-modal 内容表征对齐，并加 i2i 检索辅助任务</li>
+    </ul>
+  </li>
+  <li><b>生产状态</b>：HuggingFace 已开源 <code>BytedanceDouyinContent</code> collection；线上 A/B 具体数字（+0.5% 7日 LT 等）在验证轮中被判 "sources insufficient"（1-0 弃权），仅作者口径未被独立确认。</li>
+</ul>
+
+<h3>3.4 MMGRec — 多模态生成式推荐 <span class="tag tag-paper">生成式 SID 家族</span></h3>
+
+<ul>
+  <li><b>出处</b>：<a href="https://arxiv.org/abs/2404.16555">arXiv 2404.16555</a></li>
+  <li><b>核心</b>：<b>Graph RQ-VAE</b> 对多模态+协同信号做层次残差量化，为每个 item 分配离散 <b>Rec-ID</b>（语义 token 序列）；再用 Transformer 以用户历史序列自回归生成被推荐 item 的 Rec-ID。</li>
+  <li><b>定位</b>：与 Google TIGER、Kuaishou OneRec 构成同一个 "生成式语义 ID autoregressive" 家族。关键差异是量化器同时融合视觉、文本和 CF 协同信号。</li>
+</ul>
+
+<h3>3.5 PAD — LLM 作离线知识提供者 <span class="tag tag-paper">Tencent + CityU</span></h3>
+
+<ul>
+  <li><b>出处</b>：<a href="https://alphaxiv.org/abs/2412.04107">arXiv 2412.04107</a></li>
+  <li><b>三阶段 pipeline</b>：Pre-train → Align → Disentangle。冻结 Llama3-8B 得到 4096 维文本表征经 MLP 投影，与 SASRec 的协同 embedding 对齐。</li>
+  <li><b>对齐损失</b>：<code>L = L_REC + γ · L_MK-MMD, γ=0.1</code>，用 <b>5 个 Gaussian characteristic kernels</b>（相比 CTRL 的 cosine/linear 具备 injective 分布区分能力）。</li>
+  <li><b>解耦</b>：triple-expert（一个 aligned expert + 两个 modality-specific experts）分离语义与协同信号。</li>
+  <li><b>工程价值</b>：彻底<b>回避 LLM 在线推理延迟</b>（LLM 只在离线训练用）。</li>
+</ul>
+
+<h3>3.6 AnchorRec — Positional Collapse 的首次命名 <span class="tag tag-warn">学术新概念</span></h3>
+
+<ul>
+  <li><b>出处</b>：<a href="https://arxiv.org/pdf/2603.12726v1">arXiv 2603.12726</a>（2026-03，5 页短文）</li>
+  <li><b>failure mode 定义</b>：当图像和文本 embedding 被直接拉向共享空间时，会 <b>坍缩到几乎相同位置</b>，丢失互补模态特异性。论文用 t-SNE 在 AlignRec embedding 上可视化。</li>
+  <li><b>解法</b>：用融合 projection <code>p_mm</code> 作为 shared anchor；Anchor-Aligned Learning (InfoNCE) + Anchor-Modality Preservation 做 <b>间接 anchor-based alignment in lightweight projection domain</b>，让 main embedding <code>h</code> 保留模态结构、projection <code>p</code> 负责对齐。</li>
+  <li><b>注意</b>：positional collapse 术语目前仅由此论文引入，尚未成为业界共识名词，引用时应注明出处。</li>
+</ul>
+
+<h3>3.7 Zalando VCG — 最小可行形态的工程基线 <span class="tag tag-prod">70M 用户 / 25 市场 全量上线</span></h3>
+
+<ul>
+  <li><b>出处</b>：Zalando SE, RecSys 2025 EARL Workshop（<a href="https://ar5iv.arxiv.org/html/2507.19346">arXiv 2507.19346</a>）</li>
+  <li><b>架构</b>：两塔，<b>视频塔</b> = 均匀采样帧的 CLIP mean-pool（<code>e_v = (1/m) Σ E_CLIP(frame_j)</code>）；<b>用户塔</b> = 用户近期浏览/搜索商品的 CLIP embedding 做<b>指数衰减加权平均</b>（<code>e_u = Σ w_k·E_CLIP(s_k) / Σ w_k</code>）；dot-product 评分。</li>
+  <li><b>冷启动</b>：以"全局热门商品 embedding" 兜底 + Browse/Search few-shot 微调。</li>
+  <li><b>线上效果</b>：A/B 测试 <span class="up">+50% 视频完整度 ≥50% 观看</span>（CI 22%-78%，不含 0），已全量上线。</li>
+  <li><b>启示</b>：即便不做端到端联合训练、不做 adapter 对齐，"冻结 CLIP + 近期性加权" 在跨 domain（时尚商品 ↔ 短视频）靠共享 CLIP 空间就能匹配——<b>中长尾 e-commerce 短视频场景的工程下限非常低</b>。</li>
+</ul>
+
+<h3>3.8 AlmostRec — LMM 直接做序列推荐骨干 <span class="tag tag-paper">Tsinghua, ICMR 2025</span></h3>
+
+<ul>
+  <li><b>出处</b>：清华 Xin Wang 组, ICMR 2025（<a href="https://mn.cs.tsinghua.edu.cn/xinwang/PDF/papers/2025_Aligning%20Large%20Multimodal%20Model%20with%20Sequential%20Recommendation%20via%20Content-Behavior%20Guidance.pdf">PDF</a>）</li>
+  <li><b>核心</b>：用 LLaVa-1.5-7B 替代文本 LLM 做序列推荐骨干，联合利用历史 item 的 ID、文本描述和图像。</li>
+  <li><b>定位</b>：把推荐当作多模态指令任务，与 HLLM / NoteLLM-2 同方向但更激进（LMM 而非纯文本 LLM）。</li>
+</ul>
+
+<h2 id="industry">4. 工业落地实践：谁在生产跑什么</h2>
+
+<table>
+  <thead>
+    <tr><th>厂商 / 场景</th><th>方案</th><th>多模态表征</th><th>接入方式</th><th>对齐范式</th><th>线上效果（自报）</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ByteDance · Douyin Search / Ads</td>
+      <td><b>LEMUR</b></td>
+      <td>OCR/ASR/封面 caption → 多模态 Transformer</td>
+      <td>排序模型主干 + 梯度回传</td>
+      <td>端到端联合训练 + memory-bank</td>
+      <td><span class="up">+0.81% QAUC / -0.843% QCR</span></td>
+    </tr>
+    <tr>
+      <td>ByteDance · Douyin 内容生态</td>
+      <td><b>SAIL-Embedding</b></td>
+      <td>LLM-fusion omni-modal（V + T + A）</td>
+      <td>基础表征层（替代/增强 ID）</td>
+      <td>协同蒸馏（Seq2Item + ID2Item）</td>
+      <td>HuggingFace 开源，线上数字未独立验证</td>
+    </tr>
+    <tr>
+      <td>Xiaohongshu · Content Feed + Display Ads</td>
+      <td><b>IDProxy</b></td>
+      <td>InternVL frozen</td>
+      <td>注入 ID 槽位 / 交互模块 / target attention（<b>Structure Reuse</b>）</td>
+      <td>对比对齐（InfoNCE + 频次过滤）+ 残差门控</td>
+      <td>Ads <span class="up">+1.93% ADVV / +1.73% cost</span>；Feed <span class="up">+0.22% time spent</span></td>
+    </tr>
+    <tr>
+      <td>Zalando · 短视频推荐</td>
+      <td><b>VCG Multimodal</b></td>
+      <td>CLIP frozen</td>
+      <td>两塔召回（side-info 极简版）</td>
+      <td>无显式对齐（共享 CLIP 空间）</td>
+      <td><span class="up">+50% 完整度≥50% 观看</span>（已全量）</td>
+    </tr>
+    <tr>
+      <td>Tencent（联合 CityU）· 序列推荐</td>
+      <td><b>PAD</b></td>
+      <td>Llama3-8B frozen（离线）</td>
+      <td>三阶段蒸馏到 SASRec</td>
+      <td>分布对齐（MK-MMD）+ triple-expert 解耦</td>
+      <td>学术 benchmark（无线上数据）</td>
+    </tr>
+    <tr>
+      <td>字节 · 字节 Ranking 架构 scaling</td>
+      <td>RankMixer / LONGER / OneTrans / MixFormer 系列</td>
+      <td>多模态表征作为用户序列 token</td>
+      <td>融合到用户序列 + cross-attention</td>
+      <td>Adapter 迁移（见仓库内 <a href="./adapter-multimodal-rankmixer.html">Adapter 专题</a>）</td>
+      <td>多篇 scaling law 结果</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="warn">
+<b>验证局限</b>　本次 deep-research 在 Google/YouTube（Semantic ID、TIGER 后续）、Meta（Generative Recommender、HSTU）、Pinterest（PinnerFormer 后续）、Amazon、阿里（M3CSR、MTGR）等大厂 2024-2026 最新方案上，<b>没有通过 3 轮对抗验证的新 claim 幸存</b>。不是这些工作不存在，而是本次 fan-out 搜索优先级和证据质量不足以入选最终报告。读者在做技术选型时应单独补充这些厂商的近期 KDD/RecSys 论文。
+</div>
+
+<h2 id="challenge">5. 关键挑战与开放问题</h2>
+
+<h3>5.1 Positional Collapse（表征坍缩）</h3>
+
+<p>首次由 <a href="https://arxiv.org/pdf/2603.12726v1">AnchorRec (2026-03)</a> 命名：直接把图像和文本 embedding 拉向共享空间会导致 t-SNE 上几乎同位置坍缩，丢失互补模态特异性。<b>缓解策略</b>：间接锚点对齐（AnchorRec）、分布级而非样本级对齐（PAD 的 MK-MMD）、残差门控保留原模态信号（IDProxy）。</p>
+
+<h3>5.2 协同信号注入（Structure Reuse 比新增特征更重要）</h3>
+
+<p>IDProxy 的消融给出了近期最清晰的量化证据：把多模态 proxy 注入 ID 槽位/交互模块/target-attention 的 Structure Reuse 方案（+0.14%）比单纯拼接 side info（+0.08%）<b>多 75% 的 AUC 增益</b>。核心机制是复用排序模型已学到的"协同过滤先验"，而非让多模态特征独自跟 ID 特征在最后一层争权重。</p>
+
+<h3>5.3 端到端 vs 冻结适配器：范式选择的工程权衡</h3>
+
+<table>
+  <thead>
+    <tr><th>维度</th><th>端到端（LEMUR 路径）</th><th>冻结 + Adapter（IDProxy / PAD 路径）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>训练成本</td><td>高（3B 样本 + 多模态 Transformer 反传，但可采样到 20%）</td><td>中（MLLM 冻结只做前向缓存）</td></tr>
+    <tr><td>Serving 延迟</td><td>高（多模态 Transformer 在线推理）</td><td>低（PAD 可完全离线；IDProxy 仅 adapter 在线）</td></tr>
+    <tr><td>自报增益</td><td>约 5× 两阶段 baseline</td><td>Ads +0.23% CTR / Feed +0.22% time spent</td></tr>
+    <tr><td>版本一致性</td><td>差（MLLM 升级需联合重训）</td><td>好（MLLM 冻结快照 + adapter 增量）</td></tr>
+    <tr><td>适用场景</td><td>搜索/广告等高 ARPU 且训练算力充足的场景</td><td>内容 Feed、冷启动、长尾 item</td></tr>
+  </tbody>
+</table>
+
+<p><b>开放问题</b>：目前没有可复现的 benchmark 能同时评估这两种范式的训练算力/serving 成本/增益幅度的量化对比。</p>
+
+<h3>5.4 生成式语义 ID 的码本运维</h3>
+
+<p>RQ-VAE / 语义 ID 生成式推荐（MMGRec、TIGER、OneRec）在工业界面临三个未公开的工程问题：</p>
+
+<ul>
+  <li><b>码本利用率</b>：长尾 item 是否塌缩到少量 code？</li>
+  <li><b>码本漂移</b>：多模态编码器升级后，Rec-ID 空间是否整体迁移？如何做热更新？</li>
+  <li><b>新 item 的 Rec-ID 分配</b>：冷启动 item 如何在线生成一致的 Rec-ID？</li>
+</ul>
+
+<p>目前公开文献几乎不涉及码本运维工程细节。这是 2026-2027 最有价值的开放方向之一。</p>
+
+<h3>5.5 版本漂移（Upstream MLLM Drift）</h3>
+
+<p>当上游 MLLM 升级（InternVL → InternVL2，LLaVA-1.5 → LLaVA-1.6），下游排序模型往往需要大规模回灌历史 item 的 embedding。工业界的实际应对策略（增量蒸馏？双版本并行？冻结时间窗？）缺乏公开资料。<b>SAIL-Embedding</b> 的 ID-to-item 蒸馏实际已经隐含了一种"把多个版本 ID embedding 当作教师信号"的机制，但未展开讨论。</p>
+
+<h3>5.6 存储成本 & 推理延迟</h3>
+
+<ul>
+  <li><b>存储</b>：MLLM 隐藏维度 4096，Item 库过亿时 embedding 存储可达 TB 级。IDProxy 用 MLP adaptor 压到低维、PAD 用 triple-expert 再压缩、SAIL-Embedding 用 16 latent tokens/帧，都是在做类似权衡。</li>
+  <li><b>延迟</b>：PAD 的"LLM 作为离线 knowledge provider"是最极端的方案（LLM 完全不在线）；LEMUR 的"20% 完整反向 + 80% memory-bank"是训练侧的采样折衷；IDProxy 冻结 MLLM 推理但仍让 adapter 在线。</li>
+</ul>
+
+<h2 id="refs">6. 参考文献</h2>
+
+<h3>一手论文（Primary）</h3>
+<ol class="ref-list">
+  <li>ByteDance. <b>LEMUR: End-to-End Multimodal Transformer for Search &amp; Ranking at Douyin</b>. CIKM 2026 Applied Track. <a href="https://www.alphaxiv.org/abs/2511.10962">arXiv 2511.10962</a></li>
+  <li>Zhang et al. (Xiaohongshu + SJTU + Fudan). <b>IDProxy: Aligning MLLM Representations with Industrial Ranking Models via Coarse-to-Fine Adapter</b>. RecSys 2026 Industry Oral. <a href="https://acm-prod.literatumonline.com/doi/10.1145/3773078.3831874">ACM DOI</a> · <a href="https://arxiv.org/abs/2603.01590">arXiv 2603.01590</a></li>
+  <li>ByteDance Douyin SAIL Team + CUHK MMLab. <b>SAIL-Embedding: LLM-based Omni-modal Foundation Model for Content Understanding</b>. 2025-10. <a href="https://arxiv.org/abs/2510.12709">arXiv 2510.12709</a></li>
+  <li>Liu et al. <b>MMGRec: Multimodal Generative Recommendation with Transformer Model</b>. 2024. <a href="https://arxiv.org/abs/2404.16555">arXiv 2404.16555</a></li>
+  <li>Guo et al. (CityU HK + Tencent). <b>PAD: Pre-train, Align, and Disentangle for Multimodal Sequential Recommendation</b>. 2024-12. <a href="https://alphaxiv.org/abs/2412.04107">arXiv 2412.04107</a></li>
+  <li>Jeong, Kang, Lee. <b>AnchorRec: Anchor-based Alignment Against Positional Collapse in Multimodal Recommendation</b>. 2026-03. <a href="https://arxiv.org/pdf/2603.12726v1">arXiv 2603.12726</a></li>
+  <li>Wang et al. (Tsinghua). <b>AlmostRec: Aligning Large Multimodal Model with Sequential Recommendation via Content-Behavior Guidance</b>. ICMR 2025. <a href="https://mn.cs.tsinghua.edu.cn/xinwang/PDF/papers/2025_Aligning%20Large%20Multimodal%20Model%20with%20Sequential%20Recommendation%20via%20Content-Behavior%20Guidance.pdf">Tsinghua PDF</a></li>
+  <li>Mo et al. <b>CPMM: A CLIP-based Plugin Multimodal Framework for Recommendation</b>. Neurocomputing 2025, Vol 637. <a href="https://acm-prod.literatumonline.com/doi/10.1016/j.neucom.2025.130059">DOI</a></li>
+  <li>Zalando SE. <b>VCG Multimodal: Production Short-Video Recommender via CLIP Two-Tower</b>. RecSys 2025 EARL Workshop. <a href="https://ar5iv.arxiv.org/html/2507.19346">arXiv 2507.19346</a></li>
+</ol>
+
+<h3>二手资料（Secondary / Blog）</h3>
+<ol class="ref-list">
+  <li><a href="https://blog.iswiftai.com/posts/generative-recommendation">Generative Recommendation Overview (iSwiftAI blog)</a></li>
+  <li><a href="https://github.com/hupeiyu21/Awesome-SID-Generative-Rec">Awesome SID Generative Recommendation (GitHub)</a></li>
+  <li><a href="https://papers.lunadong.com/area/rec">Luna Dong's Recommendation Papers Index</a></li>
+  <li><a href="https://data-engineering-weekly.contentwave.net/article/scaling-embedding-stores-in-2026-cost-freshness-and-index-tradeoffs">Scaling Embedding Stores in 2026 (data-engineering-weekly)</a></li>
+  <li><a href="https://emergentmind.com/topics/sail-embedding">SAIL-Embedding topic page (emergentmind)</a></li>
+</ol>
+
+<h3>仓库内相关笔记</h3>
+<ul class="ref-list">
+  <li><a href="./adapter-multimodal-rankmixer.html">Adapter 迁移到推荐系统 · 多模态序列 × RankMixer 的落地方案</a>（本仓库 HTML 专题）</li>
+  <li><a href="./rankmixer-T-and-scaling-slope-intercept.html">RankMixer 的 Token 数 T 与 Scaling Law 的斜率/截距</a></li>
+  <li><a href="https://github.com/guoliang25/cc_paper/tree/main/paper/2026">paper/2026/ 近期 Ranking/Scaling 论文笔记</a></li>
+</ul>
+
+<div class="warn" style="margin-top:32px">
+<b>方法学 caveat</b>：
+<ol>
+  <li>多数线上 A/B 数据（LEMUR +0.81% QAUC、IDProxy +0.23% CTR、SAIL-Embedding +0.5% LT、Zalando +50% watch）均为部署厂商自报，<b>无第三方复现</b>。</li>
+  <li>LEMUR 的 "end-to-end from raw data" 存在表述水分 —— 视频实际先经 OCR/ASR/封面帧 caption 文本化，并非从像素端到端；且仅 20% 样本走完整反向传播，其余使用 memory-bank 缓存，是工程上的"采样式端到端"。</li>
+  <li>"Positional collapse" 术语目前仅由 AnchorRec 单篇论文（2026-03）引入，尚未成为业界共识名词。</li>
+  <li>部分 arXiv ID 以 25xx/26xx 开头的论文日期在 2025Q4 到 2026Q1 之间，<b>部分未经期刊/会议最终定稿</b>，细节可能在 camera-ready 版本有修订。</li>
+</ol>
+</div>
+
+<footer>
+生成于 2026-11-13 · cc_paper 项目 · 基于 Claude Code Deep Research harness（107 agents / 25 sources / 108 claims / 21 confirmed）<br/>
+验证口径：3-vote adversarial verification（need 2/3 refutes to kill）
+</footer>
+
+</div>
+</body>
+</html>
