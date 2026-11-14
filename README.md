@@ -72,6 +72,8 @@
 |------|---------|------|
 | 字节四大工业 Ranking 架构 | RankMixer / LONGER / OneTrans / MixFormer | [对比笔记](paper/对比/字节四大Ranking架构对比-RankMixer-LONGER-OneTrans-MixFormer.md) |
 | RankMixer 的 Token 数 T 与 Scaling Law 的斜率/截距 | RankMixer / LONGER / OneTrans / MixFormer | [HTML 版（含数学公式 + 论文原图）](docs/rankmixer-T-and-scaling-slope-intercept.html) · [在线访问](https://guoliang25.github.io/cc_paper/rankmixer-T-and-scaling-slope-intercept.html) |
+| Adapter 迁移到推荐系统 · 多模态序列 × RankMixer 的落地方案 | Adapter / HLLM / RankMixer | [HTML 版（含 Mermaid + LaTeX + 论文原图）](docs/adapter-multimodal-rankmixer.html) · [在线访问](https://guoliang25.github.io/cc_paper/adapter-multimodal-rankmixer.html) |
+| 多模态 Embedding × 推荐系统 · 2024–2026 工业落地综述 | LEMUR / IDProxy / SAIL-Embedding / MMGRec / PAD / AnchorRec / Zalando VCG | [HTML 版（Deep Research · 11 条高置信论断）](docs/multimodal-embedding-recsys-2024-2026.html) · [在线访问](https://guoliang25.github.io/cc_paper/multimodal-embedding-recsys-2024-2026.html) |
 
 ## 在线专题站
 
